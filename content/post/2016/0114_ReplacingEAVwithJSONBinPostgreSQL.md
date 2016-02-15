@@ -159,7 +159,7 @@ For selecting data based on a property value, we get the following results (norm
 
 ![Update results](../../../../img/2016/0114_ReplacingEAVwithJSONBinPostgreSQL/select.png)
 
-Here we can see that JSONB was again faster without indexes for EAV, but when the index is used EAV is the fastest. But then I noticed the times for the JSONB queries were the same, pointing me to the fact that the GIN index is not used. Apparently, when you use a GIN index on the full properties column, it only has effect when using the containment (@>) operator. I added this to the benchmark and it had a huge effect on the timing: only 0.183ms! That's 17500x faster then EAV, and 22700x faster than the __->>__ operator. 
+Here we can see that JSONB was again faster without indexes for EAV, but when the index is used EAV is the fastest. But then I noticed the times for the JSONB queries were the same, pointing me to the fact that the GIN index is not used. Apparently, when you use a GIN index on the full properties column, it only has effect when using the containment (@>) operator. I added this to the benchmark and it had a huge effect on the timing: only 0.153ms! That's 15000x faster then EAV, and 25000x faster than the __->>__ operator. 
 
 For me, that's fast enough.
 

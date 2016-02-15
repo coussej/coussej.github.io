@@ -25,7 +25,7 @@ This new data type enables us to replace the tedious EAV pattern by adding a sin
 
 ### Test database setup
 
-For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on a 80$ [DigitalOcean](https://www.digitalocean.com/) Ubuntu 14.04 box. After tuning some settings in _postgresql.conf_, I ran [this](https://gist.github.com/coussej/80c385332ce37df6687f) script using psql. 
+For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on a 80 $ [DigitalOcean](https://www.digitalocean.com/) Ubuntu 14.04 box. After tuning some settings in _postgresql.conf_, I ran [this](https://gist.github.com/coussej/80c385332ce37df6687f) script using psql. 
 
 The following tables were created for representing the data as EAV.
 
@@ -117,7 +117,7 @@ FROM entity_jsonb
 WHERE properties ->> 'color' = 'blue';
 ```
 
-I think we can agree that the second is both shorter (no joins!) and more pleasing to the eye. A clear win for JSONB! Here, We use the JSON ->> operator to get the color as a text value from the JSONB object. There is also a second way to achieve the same result in the JSONB model, using the @> containment operator:
+I think we can agree that the second is both shorter (no joins!) and more pleasing to the eye. A clear win for JSONB! Here, we use the JSON ->> operator to get the color as a text value from the JSONB object. There is also a second way to achieve the same result in the JSONB model, using the @> containment operator:
 
 ```sql
 -- JSONB 
@@ -126,7 +126,7 @@ FROM entity_jsonb
 WHERE properties @> '{"color": "blue"}';
 ```
 
-This is a bit more complex: we check if the JSON object in the properties colum contains the object on the right of the operator. Less readable, more performant (see later).
+This is a bit more complex: we check if the JSON object in the properties column contains the object on the right of the operator. Less readable, more performant (see later).
 
 The simplification of using JSONB is even stronger when you need to select multiple properties at once. This is where the JSONB approach really shines: we just select the properties as extra columns in our result set, without the need for joins. 
 
@@ -147,9 +147,9 @@ Now, let's talk performance.
 
 ### Performance
 
-To compare performance, I used [EXPLAIN ANALYSE](http://www.postgresql.org/docs/9.1/static/sql-explain.html) on the queries above to see how long they took. I did each query at least three times, because the first time the query planner needs some more time. At first, I executed the queries without any indexed. This will obviously be in the advantage of JSONB, as the joins required for EAV can't make use of index scans (the foreign key fields aren't indexed). After that, I created an index on the 2 foreign key columns in the EAV value table, and also a [GIN](http://www.postgresql.org/docs/9.1/static/textsearch-indexes.html) index on the JSONB column 
+To compare performance, I used [EXPLAIN ANALYSE](http://www.postgresql.org/docs/9.1/static/sql-explain.html) on the queries above to see how long they take. I did each query at least three times, because the first time the query planner needs some more time. At first, I executed the queries without any indexes. This will obviously be in the advantage of JSONB, as the joins required for EAV can't make use of index scans (the foreign key fields aren't indexed). After that, I created an index on the 2 foreign key columns in the EAV value table, and also a [GIN](http://www.postgresql.org/docs/9.1/static/textsearch-indexes.html) index on the JSONB column 
 
-For updating the data, this resulted in these execution times (in ms). Not that the scale is logarithmic:
+For updating the data, this resulted in these execution times (in ms). Note that the scale is logarithmic:
 
 ![Update results](../../../../img/2016/0114_ReplacingEAVwithJSONBinPostgreSQL/update.png)
 
@@ -194,7 +194,7 @@ For the EAV model, the tables add up to 3068MB and the indexes add up to 3427MB,
 
 In general, I think storing entity properties in JSONB format can greatly simplify your database design and maintenance. If, like me, you do a lot of ad-hoc querying, having everything stored in the same table as the entity is really useful. The fact that it simplifies interacting with your data is already a plus, but the resulting database is also 3x smaller and from my tests it seems that the performance penalties are very limited. In some cases JSONB even performes faster then EAV, which makes it even better.
 
-However, this benchmark does of course not cover all aspects (like a large increase in the number of properties of existing data, ...), so if you have any suggestions on how to improve it, please feel free to leave a comment! 
+However, this benchmark does of course not cover all aspects (like entities with a very large number of properties, a large increase in the number of properties of existing data, ...), so if you have any suggestions on how to improve it, please feel free to leave a comment! 
 
 
 

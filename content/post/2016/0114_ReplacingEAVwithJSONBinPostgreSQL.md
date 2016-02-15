@@ -25,7 +25,7 @@ This new data type enables us to replace the tedious EAV pattern by adding a sin
 
 ### Test database setup
 
-For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on a 80 $ [DigitalOcean](https://www.digitalocean.com/) Ubuntu 14.04 box. After tuning some settings in _postgresql.conf_, I ran [this](https://gist.github.com/coussej/80c385332ce37df6687f) script using psql. 
+For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on an 80 $ [DigitalOcean](https://www.digitalocean.com/) Ubuntu 14.04 box. After tuning some settings in _postgresql.conf_, I ran [this](https://gist.github.com/coussej/80c385332ce37df6687f) script using psql. 
 
 The following tables were created for representing the data as EAV.
 
@@ -61,7 +61,7 @@ CREATE TABLE entity_jsonb (
 
 A lot simpler, isn't it? 
 
-Then, I loaded the exact same data for both patterns for a total of 10 million entities in the form the one below. This way, we have some different data types among the attribute set.
+Then, I loaded the exact same data for both patterns for a total of 10 million entities in the form of the one below. This way, we have some different data types among the attribute set.
 
 ```go
 {

@@ -6,8 +6,205 @@
     <description>Recent content on coussej</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 03 Jan 2016 21:38:21 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 14 Jan 2016 21:24:05 +0000</lastBuildDate>
     <atom:link href="http://coussej.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Replacing EAV with JSONB in PostgreSQL</title>
+      <link>http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/</link>
+      <pubDate>Thu, 14 Jan 2016 21:24:05 +0000</pubDate>
+      
+      <guid>http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/</guid>
+      <description>
+
+&lt;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt;: JSONB has potential for greatly simplifying schema design without sacrificing query performance.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&#34;introduction:419b4933fdd1f3e6f0f417c34732288f&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;It must be one of the oldest use cases in the world of relational databases: you have an entity, and you need to store certain properties of this entity. But, not all entities have the same set of properties, and properties will be added in the future.&lt;/p&gt;
+
+&lt;p&gt;The most naive way to solve this problem would be to create a column in your table for each property, and just fill in the ones that are relevant. Great! Problem solved. Until your table contains millions of records and you need to add a new non-null property.&lt;/p&gt;
+
+&lt;p&gt;Enter &lt;a href=&#34;https://en.wikipedia.org/wiki/Entity-attribute-value_model&#34;&gt;Entity-Attribute-Value&lt;/a&gt;. I&amp;rsquo;ve seen this pattern in almost every database I&amp;rsquo;ve worked with. One table contains the entities, another table contains the names of the properties (attributes) and a third table links the entities with their attributes and holds the value. This gives you the flexibility for having different sets of properties (attributes) for different entities, and also for adding properties on the fly &lt;em&gt;without locking your table for 3 days&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Nonetheless,  I wouldn&amp;rsquo;t be writing this post if there were no downsides to this approach. Selecting one or more entities based on 1 attribute value requires 2 joins: one with the attribute table and one with the value table. Need entities bases on 2 attributes? That&amp;rsquo;s 4 joins! Also, the properties usually are all stored as strings, which results in type casting, both for the result as for the WHERE clause. If you write a lot of ad-hoc queries, this is very tedious.&lt;/p&gt;
+
+&lt;p&gt;Despite these obvious shortcomings, EAV has been used for a long time to solve this kind of problem. It was a necessary evil, and there just was no better alternative. But then PostgreSQL came along with a new feature&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Starting from PostgreSQL 9.4, a &lt;a href=&#34;http://www.postgresql.org/docs/9.5/static/datatype-json.html&#34;&gt;JSONB datatype&lt;/a&gt; was added for storing binary JSON data. While storing JSON in this format usualy takes slightly more space and time then plain text JSON, executing operations on it is much faster. Also JSONB supports indexing, making querying it even faster.&lt;/p&gt;
+
+&lt;p&gt;This new data type enables us to replace the tedious EAV pattern by adding a single JSONB column to our entity table, greatly simplifying the database design. But many argue that this must come with a performance cost. That&amp;rsquo;s why I created this benchmark.&lt;/p&gt;
+
+&lt;h3 id=&#34;test-database-setup:419b4933fdd1f3e6f0f417c34732288f&#34;&gt;Test database setup&lt;/h3&gt;
+
+&lt;p&gt;For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on a 80$ &lt;a href=&#34;https://www.digitalocean.com/&#34;&gt;DigitalOcean&lt;/a&gt; Ubuntu 14.04 box. After tuning some settings in &lt;em&gt;postgresql.conf&lt;/em&gt;, I ran &lt;a href=&#34;https://gist.github.com/coussej/80c385332ce37df6687f&#34;&gt;this&lt;/a&gt; script using psql.&lt;/p&gt;
+
+&lt;p&gt;The following tables were created for representing the data as EAV.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;CREATE TABLE entity ( 
+  id           SERIAL PRIMARY KEY, 
+  name         TEXT, 
+  description  TEXT
+);
+CREATE TABLE entity_attribute (
+  id          SERIAL PRIMARY KEY, 
+  name        TEXT, 
+  description TEXT
+);
+CREATE TABLE entity_attribute_value (
+  id                  SERIAL PRIMARY KEY, 
+  entity_id           INT    REFERENCES entity(id), 
+  entity_attribute_id INT    REFERENCES entity_attribute(id), 
+  value               TEXT
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The table below represents the same data, but with the attributes in a JSONB column which I called properties.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;CREATE TABLE entity_jsonb (
+  id          SERIAL PRIMARY KEY, 
+  name        TEXT, 
+  description TEXT,
+  properties  JSONB
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A lot simpler, isn&amp;rsquo;t it?&lt;/p&gt;
+
+&lt;p&gt;Then, I loaded the exact same data for both patterns for a total of 10 million entities in the form the one below. This way, we have some different data types among the attribute set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;{
+  id:          1
+  name:        &amp;quot;Entity1&amp;quot;
+  description: &amp;quot;Test entity no. 1&amp;quot;
+  properties:  {
+    color:        &amp;quot;red&amp;quot;
+    lenght:       120
+    width:        3.1882420
+    hassomething: true
+    country:      &amp;quot;Belgium&amp;quot;
+  } 
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So, we now have the same data stored in both formats. Let&amp;rsquo;s start comparing!&lt;/p&gt;
+
+&lt;h3 id=&#34;query-aesthetics:419b4933fdd1f3e6f0f417c34732288f&#34;&gt;Query aesthetics&lt;/h3&gt;
+
+&lt;p&gt;Earlier it was already clear that the design of the database was greatly simplified by using a JSONB column for the properties instead of using a 3 tabes EAV model. But does this also reflect in the queries?&lt;/p&gt;
+
+&lt;p&gt;Updating a single entity property looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;-- EAV
+UPDATE entity_attribute_value 
+SET value = &#39;blue&#39; 
+WHERE entity_attribute_id = 1 
+  AND entity_id = 120;
+
+-- JSONB
+UPDATE entity_jsonb 
+SET properties = jsonb_set(properties, &#39;{&amp;quot;color&amp;quot;}&#39;, &#39;&amp;quot;blue&amp;quot;&#39;) 
+WHERE id = 120;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Admittedly, the latter doesn&amp;rsquo;t look simpler. To update the property in the JSONB object, we have to use the &lt;em&gt;&lt;a href=&#34;http://www.postgresql.org/docs/9.5/static/functions-json.html&#34;&gt;jsonb_set()&lt;/a&gt;&lt;/em&gt; function, and we have to pass our new value as a JSONB object. However, we don&amp;rsquo;t need to know any id&amp;rsquo;s upfront. When you look at the EAV example, you have to know both the entity_id and the entity_attribute_id to perform the update. If you want to update a property in the JSONB column based on the entity name, go ahead, it&amp;rsquo;s all in the same row.&lt;/p&gt;
+
+&lt;p&gt;Now, let&amp;rsquo;s select that entity we just updated, based on its new color:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;-- EAV
+SELECT e.name 
+FROM entity e 
+  INNER JOIN entity_attribute_value eav ON e.id = eav.entity_id
+  INNER JOIN entity_attribute ea ON eav.entity_attribute_id = ea.id
+WHERE ea.name = &#39;color&#39; AND eav.value = &#39;blue&#39;;
+
+-- JSONB
+SELECT name 
+FROM entity_jsonb 
+WHERE properties -&amp;gt;&amp;gt; &#39;color&#39; = &#39;blue&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I think we can agree that the second is both shorter (no joins!) and more pleasing to the eye. A clear win for JSONB! Here, We use the JSON -&amp;gt;&amp;gt; operator to get the color as a text value from the JSONB object. There is also a second way to achieve the same result in the JSONB model, using the @&amp;gt; containment operator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;-- JSONB 
+SELECT name 
+FROM entity_jsonb 
+WHERE properties @&amp;gt; &#39;{&amp;quot;color&amp;quot;: &amp;quot;blue&amp;quot;}&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a bit more complex: we check if the JSON object in the properties colum contains the object on the right of the operator. Less readable, more performant (see later).&lt;/p&gt;
+
+&lt;p&gt;The simplification of using JSONB is even stronger when you need to select multiple properties at once. This is where the JSONB approach really shines: we just select the properties as extra columns in our result set, without the need for joins.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;-- JSONB 
+SELECT name
+  , properties -&amp;gt;&amp;gt; &#39;color&#39;
+  , properties -&amp;gt;&amp;gt; &#39;country&#39;
+FROM entity_jsonb 
+WHERE id = 120;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With EAV, you would need 2 joins per property you want to query.&lt;/p&gt;
+
+&lt;p&gt;In my opinion, the queries above show a great simplification in database design. If you want more examples on how to query JSONB data, check out &lt;a href=&#34;http://schinckel.net/2014/05/25/querying-json-in-postgres/&#34;&gt;this&lt;/a&gt; post.&lt;/p&gt;
+
+&lt;p&gt;Now, let&amp;rsquo;s talk performance.&lt;/p&gt;
+
+&lt;h3 id=&#34;performance:419b4933fdd1f3e6f0f417c34732288f&#34;&gt;Performance&lt;/h3&gt;
+
+&lt;p&gt;To compare performance, I used &lt;a href=&#34;http://www.postgresql.org/docs/9.1/static/sql-explain.html&#34;&gt;EXPLAIN ANALYSE&lt;/a&gt; on the queries above to see how long they took. I did each query at least three times, because the first time the query planner needs some more time. At first, I executed the queries without any indexed. This will obviously be in the advantage of JSONB, as the joins required for EAV can&amp;rsquo;t make use of index scans (the foreign key fields aren&amp;rsquo;t indexed). After that, I created an index on the 2 foreign key columns in the EAV value table, and also a &lt;a href=&#34;http://www.postgresql.org/docs/9.1/static/textsearch-indexes.html&#34;&gt;GIN&lt;/a&gt; index on the JSONB column&lt;/p&gt;
+
+&lt;p&gt;For updating the data, this resulted in these execution times (in ms). Not that the scale is logarithmic:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;../../../../img/2016/0114_ReplacingEAVwithJSONBinPostgreSQL/update.png&#34; alt=&#34;Update results&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Here, we see that the JSONB is much (&amp;gt;50000x) faster than EAV when not using any indexes, for the reason mentioned above. When we index the foreing key columns the difference is almost eliminated, but JSONB is still 1.3x faster than EAV. Notice that the index on the JSONB column does not have any effect here, as we don&amp;rsquo;t use the properties column in the criteria.&lt;/p&gt;
+
+&lt;p&gt;For selecting data based on a property value, we get the following results (normal scale):&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;../../../../img/2016/0114_ReplacingEAVwithJSONBinPostgreSQL/select.png&#34; alt=&#34;Update results&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Here we can see that JSONB was again faster without indexes for EAV, but when the index is used EAV is the fastest. But then I noticed the times for the JSONB queries were the same, pointing me to the fact that the GIN index is not used. Apparently, when you use a GIN index on the full properties column, it only has effect when using the containment (@&amp;gt;) operator. I added this to the benchmark and it had a huge effect on the timing: only 0.183ms! That&amp;rsquo;s 17500x faster then EAV, and 22700x faster than the &lt;strong&gt;-&amp;gt;&amp;gt;&lt;/strong&gt; operator.&lt;/p&gt;
+
+&lt;p&gt;For me, that&amp;rsquo;s fast enough.&lt;/p&gt;
+
+&lt;h3 id=&#34;table-size:419b4933fdd1f3e6f0f417c34732288f&#34;&gt;Table size&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s compare the sizes of both approaches. In psql we can show the size of all tables and indexes using the &lt;strong&gt;\dti+&lt;/strong&gt; command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;test-# \dti+
+                                                     List of relations
+                      Name                      | Type  |         Table          |  Size   |
+------------------------------------------------+-------+------------------------+---------+
+ entity                                         | table |                        | 730 MB  |
+ entity_attribute                               | table |                        | 48 kB   |
+ entity_attribute_name_idx                      | index | entity_attribute       | 16 kB   |
+ entity_attribute_name_key                      | index | entity_attribute       | 16 kB   |
+ entity_attribute_pkey                          | index | entity_attribute       | 16 kB   |
+ entity_attribute_value                         | table |                        | 2338 MB |
+ entity_attribute_value_entity_attribute_id_idx | index | entity_attribute_value | 1071 MB |
+ entity_attribute_value_entity_id_idx           | index | entity_attribute_value | 1071 MB |
+ entity_attribute_value_pkey                    | index | entity_attribute_value | 1071 MB |
+ entity_jsonb                                   | table |                        | 1817 MB |
+ entity_jsonb_pkey                              | index | entity_jsonb           | 214 MB  |
+ entity_jsonb_properties_idx                    | index | entity_jsonb           | 104 MB  |
+ entity_pkey                                    | index | entity                 | 214 MB  |
+(13 rows)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For the EAV model, the tables add up to 3068MB and the indexes add up to 3427MB, resulting in a total 6.43GB. On the other hand, the JSONB model uses 1817MB for the table, and 318MB for the indexes, totalling 2,08GB. Thats 3x less. This supprised me a bit, because we store the property names in each JSONB object. But when you think about it, in EAV we store 2 integer foreign keys per attribute value, resulting in 8 bytes of extra data. Also, in EAV all property values are stored as text, while JSONB will use numeric and boolean values internally where possible, resulting in less space.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion:419b4933fdd1f3e6f0f417c34732288f&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;In general, I think storing entity properties in JSONB format can greatly simplify your database design and maintenance. If, like me, you do a lot of ad-hoc querying, having everything stored in the same table as the entity is really useful. The fact that it simplifies interacting with your data is already a plus, but the resulting database is also 3x smaller and from my tests it seems that the performance penalties are very limited. In some cases JSONB even performes faster then EAV, which makes it even better.&lt;/p&gt;
+
+&lt;p&gt;However, this benchmark does of course not cover all aspects (like a large increase in the number of properties of existing data, &amp;hellip;), so if you have any suggestions on how to improve it, please feel free to leave a comment!&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>about</title>

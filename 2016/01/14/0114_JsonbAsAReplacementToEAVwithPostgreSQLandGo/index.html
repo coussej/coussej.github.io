@@ -7,7 +7,7 @@
 		<meta name="author" content="Jeroen Coussement">
 		<meta name="description" content="Thoughts and Ideas">
 		<meta name="generator" content="Hugo 0.16-DEV" />
-		<title>about &middot; coussej</title>
+		<title>0114_JsonbAsAReplacementToEAVwithPostgreSQLandGo &middot; coussej</title>
 		<link rel="shortcut icon" href="http://coussej.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="http://coussej.github.io/css/style.css">
 		<link rel="stylesheet" href="http://coussej.github.io/css/highlight.css">
@@ -25,6 +25,8 @@
 	
 
 	
+		<a href='http://coussej.github.io/about'>About</a>
+	
 
 	
 	<a class="cta" href="http://coussej.github.io/index.xml">Subscribe</a>
@@ -34,11 +36,21 @@
         <section id="wrapper">
             <article class="post">
                 <header>
-                    <h1>about</h1>
-                    <h2 class="headline">January 3, 2016</h2>
+                    <h1>0114_JsonbAsAReplacementToEAVwithPostgreSQLandGo</h1>
+                    <h2 class="headline">January 14, 2016</h2>
                 </header>
                 <section id="post-body">
-                    <p>Hi, I&rsquo;m Jeroen Coussement, a software engineer living in Belgium. My work resolves around industrial software: MES systems, Machine interfacing, Business Intelligence, &hellip; Aside from that I&rsquo;m a heavy supporter of open-source technologies as in many cases they are both technology-wise and community-wise superior to their closed-source competitors.</p>
+                    
+
+<h1 id="context:e964d935ca42dcf93df3d91e720fa56e">Context</h1>
+
+<p>It must be one of the oldest use cases in the world of relational databases: you have an entity, and you need to store certain properties of this entity. But, not all entities have the same set of properties, and properties might be added in the future.</p>
+
+<p>The most naieve way to solve this problem would be to create a column in your table for each property, and just fill in the ones that are relevant. Great! Problem solved. Until your table contains a few million records and you need to add a new not-null property. Uh&hellip;</p>
+
+<p>Enter <a href="https://en.wikipedia.org/wiki/Entity-attribute-value_model">Entity-Attribute-Value</a>. I&rsquo;ve seen this pattern in almost every database I&rsquo;ve worked with. One table contains the entities, another table contains the names of the attributes and a third table links the entities with their attributes and holds the value. This gives you the flexibility for having different sets of properties (attributes) for different entities, and also for adding properties on the fly without locking your table for seven days. But I wouldn&rsquo;t be writing this post if there were no downsides. Inserting attributes for an entity requires you to find the id of the relevant attribute, and then</p>
+
+<p>EAV has been used for a long time to solve this kind of problem. It was a necessary evil, and there just was no better alternative. But then came PostgreSQL with another killer feature: <strong>jsonb</strong></p>
 
                 </section>
             </article>
@@ -51,7 +63,7 @@
                         </div>
                     </a>
                 <section id="sharing">
-                    <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2fabout%2f - about by @coussej"><span class="icon-twitter"> Tweet</span></a>
+                    <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2f2016%2f01%2f14%2f0114_JsonbAsAReplacementToEAVwithPostgreSQLandGo%2f - 0114_JsonbAsAReplacementToEAVwithPostgreSQLandGo by @coussej"><span class="icon-twitter"> Tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(
@@ -67,9 +79,9 @@
             <div id="disqus_thread"></div>
 <script type="text/javascript">
     var disqus_shortname = 'coussej';
-    var disqus_identifier = 'http:\/\/coussej.github.io\/about\/';
-    var disqus_title = 'about';
-    var disqus_url = 'http:\/\/coussej.github.io\/about\/';
+    var disqus_identifier = 'http:\/\/coussej.github.io\/2016\/01\/14\/0114_JsonbAsAReplacementToEAVwithPostgreSQLandGo\/';
+    var disqus_title = '0114_JsonbAsAReplacementToEAVwithPostgreSQLandGo';
+    var disqus_url = 'http:\/\/coussej.github.io\/2016\/01\/14\/0114_JsonbAsAReplacementToEAVwithPostgreSQLandGo\/';
 
     (function() {
         var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
@@ -86,7 +98,7 @@
     
         
         <li>
-            <a href="http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">Replacing EAV with JSONB in PostgreSQL<aside class="dates">Jan 14</aside></a>
+            <a href="http://coussej.github.io/2016/01/14/0114_JsonbAsAReplacementToEAVwithPostgreSQLandGo/">0114_JsonbAsAReplacementToEAVwithPostgreSQLandGo<aside class="dates">Jan 14</aside></a>
         </li>
         
    

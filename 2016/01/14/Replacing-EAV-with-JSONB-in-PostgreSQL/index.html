@@ -66,7 +66,7 @@
 
 <h3 id="test-database-setup:419b4933fdd1f3e6f0f417c34732288f">Test database setup</h3>
 
-<p>For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on a 80 $ <a href="https://www.digitalocean.com/">DigitalOcean</a> Ubuntu 14.04 box. After tuning some settings in <em>postgresql.conf</em>, I ran <a href="https://gist.github.com/coussej/80c385332ce37df6687f">this</a> script using psql.</p>
+<p>For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on an 80 $ <a href="https://www.digitalocean.com/">DigitalOcean</a> Ubuntu 14.04 box. After tuning some settings in <em>postgresql.conf</em>, I ran <a href="https://gist.github.com/coussej/80c385332ce37df6687f">this</a> script using psql.</p>
 
 <p>The following tables were created for representing the data as EAV.</p>
 
@@ -100,7 +100,7 @@ CREATE TABLE entity_attribute_value (
 
 <p>A lot simpler, isn&rsquo;t it?</p>
 
-<p>Then, I loaded the exact same data for both patterns for a total of 10 million entities in the form the one below. This way, we have some different data types among the attribute set.</p>
+<p>Then, I loaded the exact same data for both patterns for a total of 10 million entities in the form of the one below. This way, we have some different data types among the attribute set.</p>
 
 <pre><code class="language-go">{
   id:          1

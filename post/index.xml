@@ -41,7 +41,7 @@
 
 &lt;h3 id=&#34;test-database-setup:419b4933fdd1f3e6f0f417c34732288f&#34;&gt;Test database setup&lt;/h3&gt;
 
-&lt;p&gt;For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on a 80 $ &lt;a href=&#34;https://www.digitalocean.com/&#34;&gt;DigitalOcean&lt;/a&gt; Ubuntu 14.04 box. After tuning some settings in &lt;em&gt;postgresql.conf&lt;/em&gt;, I ran &lt;a href=&#34;https://gist.github.com/coussej/80c385332ce37df6687f&#34;&gt;this&lt;/a&gt; script using psql.&lt;/p&gt;
+&lt;p&gt;For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on an 80 $ &lt;a href=&#34;https://www.digitalocean.com/&#34;&gt;DigitalOcean&lt;/a&gt; Ubuntu 14.04 box. After tuning some settings in &lt;em&gt;postgresql.conf&lt;/em&gt;, I ran &lt;a href=&#34;https://gist.github.com/coussej/80c385332ce37df6687f&#34;&gt;this&lt;/a&gt; script using psql.&lt;/p&gt;
 
 &lt;p&gt;The following tables were created for representing the data as EAV.&lt;/p&gt;
 
@@ -75,7 +75,7 @@ CREATE TABLE entity_attribute_value (
 
 &lt;p&gt;A lot simpler, isn&amp;rsquo;t it?&lt;/p&gt;
 
-&lt;p&gt;Then, I loaded the exact same data for both patterns for a total of 10 million entities in the form the one below. This way, we have some different data types among the attribute set.&lt;/p&gt;
+&lt;p&gt;Then, I loaded the exact same data for both patterns for a total of 10 million entities in the form of the one below. This way, we have some different data types among the attribute set.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;{
   id:          1

@@ -6,8 +6,119 @@
     <description>Recent content on coussej</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 14 Jan 2016 21:24:05 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 16 Feb 2016 10:33:11 +0000</lastBuildDate>
     <atom:link href="http://coussej.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Handling JSONB in Go Structs</title>
+      <link>http://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/</link>
+      <pubDate>Tue, 16 Feb 2016 10:33:11 +0000</pubDate>
+      
+      <guid>http://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/</guid>
+      <description>
+
+&lt;p&gt;In a &lt;a href=&#34;http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/&#34;&gt;previous&lt;/a&gt; post I already described how much database design can be simplified by using the PostgreSQL JSONB datatypes for storing entity properties. Here, I&amp;rsquo;ll show how you can map this design directly onto your structs in Go.&lt;/p&gt;
+
+&lt;p&gt;We want to handle this kind of entity in our application:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;{
+  id:          1
+  name:        &amp;quot;test entity 1&amp;quot;
+  description: &amp;quot;a test entity for some guy&#39;s blog&amp;quot;
+  properties:  {
+    color:        &amp;quot;red&amp;quot;
+    lenght:       120
+    width:        3.1882420
+    hassomething: true
+    country:      &amp;quot;Belgium&amp;quot;
+  } 
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To store this kind of entity, we create the following table in a PostgreSQL database:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;CREATE TABLE entity (
+  id          SERIAL PRIMARY KEY, 
+  name        TEXT, 
+  description TEXT,
+  properties  JSONB
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;handling-in-go:6f7814701979176031e8e8603754b668&#34;&gt;Handling in Go&lt;/h4&gt;
+
+&lt;p&gt;In go, wel&amp;rsquo;ll create a struct with the same fields as our database columns:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;type Entity struct {
+	Id          int         `db:&amp;quot;id&amp;quot;`
+	Name        string      `db:&amp;quot;name&amp;quot;`
+	Description string      `db:&amp;quot;description&amp;quot;`
+	Properties  ???         `db:&amp;quot;properties&amp;quot;`
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But what type will we give to the Properties field? Turns out that when querying the JSONB column, the &lt;a href=&#34;https://github.com/lib/pq&#34;&gt;lib/pq&lt;/a&gt; driver will return a bytestring. The most convenient way to work with JSONB coming from a database would be in the form of a &lt;em&gt;map[string]interface{}&lt;/em&gt;, not in the form of a JSON object and most certainly not as bytes. Luckely, the Go standard library has 2 built-in interfaces we can implement to create our own database compatible type: &lt;em&gt;sql.Scanner&lt;/em&gt; &amp;amp; &lt;em&gt;driver.Valuer&lt;/em&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;For more info on these interfaces, check out &lt;a href=&#34;http://jmoiron.net/blog/built-in-interfaces&#34;&gt;this&lt;/a&gt; excellent post. In summary, when you have a type that implements these 2 interfaces, you can use that type with the database/sql package.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;First, we create the type for our properties field. Note that if you have different kinds of entities (orders, customers, books, &amp;hellip;), you can simple re-use this type if they have a similar field:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;type PropertyMap map[string]interface{}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we implement the interface. Let&amp;rsquo;s start with &lt;em&gt;driver.Valuer&lt;/em&gt;. To satisfy this interface, we must implement the &lt;em&gt;Value&lt;/em&gt; method, which must transform our type to a database driver compatible type. In our case, we&amp;rsquo;ll marshall the map to JSONB data (= []byte):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func (p PropertyMap) Value() (driver.Value, error) {
+	j, err := json.Marshal(p)
+	return j, err
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Thats&amp;rsquo;s it. Time for the second interface, &lt;em&gt;sql.Scanner&lt;/em&gt;, which requires us to implement a &lt;em&gt;Scan&lt;/em&gt; method. This method must take the raw data that comes from the database and transform it to our new type. In our case, the database will return JSONB ([]byte) that we must transform to our type (the reverse of what we did with &lt;em&gt;driver.Valuer&lt;/em&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func (p *PropertyMap) Scan(src interface{}) error {
+	var source []byte = src.([]byte)
+
+	var i interface{}
+	err := json.Unmarshal(source, &amp;amp;i)
+
+	if err != nil {
+		return err
+	}
+
+	*p = i.(map[string]interface{})
+	return nil
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s it. Now we can use this type as any other type with the database/sql package:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;e := Entity{Id:1}
+
+err = db.QueryRow(&amp;quot;SELECT name, description, properties FROM entity WHERE id = $1&amp;quot;, 
+              e.Id).Scan(&amp;amp;e.Name, &amp;amp;e.Description, &amp;amp;e.Properties)
+              
+fmt.Printf(&amp;quot;%+v\n&amp;quot;, e)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which results in&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{Id:1 Name:test entity 1 Description:a test entity for some guy&#39;s blog Properties:map[color:red width:3.1882420 length:120 country:Belgium hassomething:true]}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you want even more simplicity, I suggest you take a look at the &lt;a href=&#34;https://github.com/jmoiron/sqlx&#34;&gt;sqlx&lt;/a&gt; package, which extend the standard sql package with some very usefull features. For example, instead of selecting a number of rows and scanning them row by row into a struct, sqlx allows you to do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var test []Entity
+db.Select(&amp;amp;test, &amp;quot;SELECT * FROM entity&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Ah, simplicity.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Replacing EAV with JSONB in PostgreSQL</title>

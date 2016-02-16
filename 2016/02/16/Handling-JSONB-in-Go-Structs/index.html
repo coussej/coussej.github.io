@@ -1,0 +1,260 @@
+    <!DOCTYPE html>
+<html lang="en-us">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Jeroen Coussement">
+		<meta name="description" content="Thoughts and Ideas">
+		<meta name="generator" content="Hugo 0.16-DEV" />
+		<title>Handling JSONB in Go Structs &middot; coussej</title>
+		<link rel="shortcut icon" href="http://coussej.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="http://coussej.github.io/css/style.css">
+		<link rel="stylesheet" href="http://coussej.github.io/css/highlight.css">
+		<link rel="stylesheet" href="http://coussej.github.io/css/monosocialiconsfont.css">
+		
+		<link href="http://coussej.github.io/index.xml" rel="alternate" type="application/rss+xml" title="coussej" />
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='http://coussej.github.io/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+		<a href='http://coussej.github.io/about'>About</a>
+	
+
+	
+	<a class="cta" href="http://coussej.github.io/index.xml">Subscribe</a>
+	
+</nav>
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>Handling JSONB in Go Structs</h1>
+                    <h2 class="headline">February 16, 2016</h2>
+                </header>
+                <section id="post-body">
+                    
+
+<p>In a <a href="/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">previous</a> post I already described how much database design can be simplified by using the PostgreSQL JSONB datatypes for storing entity properties. Here, I&rsquo;ll show how you can map this design directly onto your structs in Go.</p>
+
+<p>We want to handle this kind of entity in our application:</p>
+
+<pre><code class="language-go">{
+  id:          1
+  name:        &quot;test entity 1&quot;
+  description: &quot;a test entity for some guy's blog&quot;
+  properties:  {
+    color:        &quot;red&quot;
+    lenght:       120
+    width:        3.1882420
+    hassomething: true
+    country:      &quot;Belgium&quot;
+  } 
+}
+</code></pre>
+
+<p>To store this kind of entity, we create the following table in a PostgreSQL database:</p>
+
+<pre><code class="language-sql">CREATE TABLE entity (
+  id          SERIAL PRIMARY KEY, 
+  name        TEXT, 
+  description TEXT,
+  properties  JSONB
+);
+</code></pre>
+
+<h4 id="handling-in-go:6f7814701979176031e8e8603754b668">Handling in Go</h4>
+
+<p>In go, wel&rsquo;ll create a struct with the same fields as our database columns:</p>
+
+<pre><code class="language-go">type Entity struct {
+	Id          int         `db:&quot;id&quot;`
+	Name        string      `db:&quot;name&quot;`
+	Description string      `db:&quot;description&quot;`
+	Properties  ???         `db:&quot;properties&quot;`
+}
+</code></pre>
+
+<p>But what type will we give to the Properties field? Turns out that when querying the JSONB column, the <a href="https://github.com/lib/pq">lib/pq</a> driver will return a bytestring. The most convenient way to work with JSONB coming from a database would be in the form of a <em>map[string]interface{}</em>, not in the form of a JSON object and most certainly not as bytes. Luckely, the Go standard library has 2 built-in interfaces we can implement to create our own database compatible type: <em>sql.Scanner</em> &amp; <em>driver.Valuer</em></p>
+
+<blockquote>
+<blockquote>
+<p>For more info on these interfaces, check out <a href="http://jmoiron.net/blog/built-in-interfaces">this</a> excellent post. In summary, when you have a type that implements these 2 interfaces, you can use that type with the database/sql package.</p>
+</blockquote>
+</blockquote>
+
+<p>First, we create the type for our properties field. Note that if you have different kinds of entities (orders, customers, books, &hellip;), you can simple re-use this type if they have a similar field:</p>
+
+<pre><code class="language-go">type PropertyMap map[string]interface{}
+</code></pre>
+
+<p>Then we implement the interface. Let&rsquo;s start with <em>driver.Valuer</em>. To satisfy this interface, we must implement the <em>Value</em> method, which must transform our type to a database driver compatible type. In our case, we&rsquo;ll marshall the map to JSONB data (= []byte):</p>
+
+<pre><code class="language-go">func (p PropertyMap) Value() (driver.Value, error) {
+	j, err := json.Marshal(p)
+	return j, err
+}
+</code></pre>
+
+<p>Thats&rsquo;s it. Time for the second interface, <em>sql.Scanner</em>, which requires us to implement a <em>Scan</em> method. This method must take the raw data that comes from the database and transform it to our new type. In our case, the database will return JSONB ([]byte) that we must transform to our type (the reverse of what we did with <em>driver.Valuer</em>):</p>
+
+<pre><code class="language-go">func (p *PropertyMap) Scan(src interface{}) error {
+	var source []byte = src.([]byte)
+
+	var i interface{}
+	err := json.Unmarshal(source, &amp;i)
+
+	if err != nil {
+		return err
+	}
+
+	*p = i.(map[string]interface{})
+	return nil
+}
+</code></pre>
+
+<p>That&rsquo;s it. Now we can use this type as any other type with the database/sql package:</p>
+
+<pre><code class="language-go">e := Entity{Id:1}
+
+err = db.QueryRow(&quot;SELECT name, description, properties FROM entity WHERE id = $1&quot;, 
+              e.Id).Scan(&amp;e.Name, &amp;e.Description, &amp;e.Properties)
+              
+fmt.Printf(&quot;%+v\n&quot;, e)
+</code></pre>
+
+<p>which results in</p>
+
+<pre><code>{Id:1 Name:test entity 1 Description:a test entity for some guy's blog Properties:map[color:red width:3.1882420 length:120 country:Belgium hassomething:true]}
+</code></pre>
+
+<p>If you want even more simplicity, I suggest you take a look at the <a href="https://github.com/jmoiron/sqlx">sqlx</a> package, which extend the standard sql package with some very usefull features. For example, instead of selecting a number of rows and scanning them row by row into a struct, sqlx allows you to do this:</p>
+
+<pre><code class="language-go">var test []Entity
+db.Select(&amp;test, &quot;SELECT * FROM entity&quot;)
+</code></pre>
+
+<p>Ah, simplicity.</p>
+
+                </section>
+            </article>
+            <footer id="post-meta" class="clearfix">
+                <a href="https://twitter.com/coussej">
+                        <img class="avatar" src="http://coussej.github.io/images/avatar.png">
+                        <div>
+                            <span class="dark">Jeroen Coussement</span>
+                            <span>minimalist | gopher | open-source advocate</span>
+                        </div>
+                    </a>
+                <section id="sharing">
+                    <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2f2016%2f02%2f16%2fHandling-JSONB-in-Go-Structs%2f - Handling%20JSONB%20in%20Go%20Structs by @coussej"><span class="icon-twitter"> Tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+                </section>
+            </footer>
+
+            <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'coussej';
+    var disqus_identifier = 'http:\/\/coussej.github.io\/2016\/02\/16\/Handling-JSONB-in-Go-Structs\/';
+    var disqus_title = 'Handling JSONB in Go Structs';
+    var disqus_url = 'http:\/\/coussej.github.io\/2016\/02\/16\/Handling-JSONB-in-Go-Structs\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+            <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+    
+    
+        
+        <li>
+            <a href="http://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/">Handling JSONB in Go Structs<aside class="dates">Feb 16</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">Replacing EAV with JSONB in PostgreSQL<aside class="dates">Jan 14</aside></a>
+        </li>
+        
+   
+    
+        
+   
+    
+        
+        <li>
+            <a href="http://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/">Listening to generic JSON notifications from PostgreSQL in Go<aside class="dates">Sep 15</aside></a>
+        </li>
+        
+   
+</ul>
+            <footer id="footer">
+    
+        
+<div id="social">
+    
+    <a class="symbol" href="https://www.github.com/coussej">
+        circlegithub
+    </a>
+    
+    <a class="symbol" href="https://www.linkedin.com/in/coussej">
+        circlelinkedin
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/coussej">
+        circletwitterbird
+    </a>
+    
+</div>
+
+    
+    <p class="small">
+    
+        © Copyright 2016 Jeroen Coussement
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="http://coussej.github.io/js/main.js"></script>
+<script src="http://coussej.github.io/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-67688634-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+    </body>
+</html>

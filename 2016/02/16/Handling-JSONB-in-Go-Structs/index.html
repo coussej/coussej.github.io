@@ -103,7 +103,7 @@
 }
 </code></pre>
 
-<p>Thats&rsquo;s it. Time for the second interface, <em>sql.Scanner</em>, which requires us to implement a <em>Scan</em> method. This method must take the raw data that comes from the database and transform it to our new type. In our case, the database will return JSONB ([]byte) that we must transform to our type (the reverse of what we did with <em>driver.Valuer</em>):</p>
+<p>That&rsquo;s it. Time for the second interface, <em>sql.Scanner</em>, which requires us to implement a <em>Scan</em> method. This method must take the raw data that comes from the database and transform it to our new type. In our case, the database will return JSONB ([]byte) that we must transform to our type (the reverse of what we did with <em>driver.Valuer</em>):</p>
 
 <pre><code class="language-go">func (p *PropertyMap) Scan(src interface{}) error {
 	var source []byte = src.([]byte)
@@ -135,7 +135,7 @@ fmt.Printf(&quot;%+v\n&quot;, e)
 <pre><code>{Id:1 Name:test entity 1 Description:a test entity for some guy's blog Properties:map[color:red width:3.1882420 length:120 country:Belgium hassomething:true]}
 </code></pre>
 
-<p>If you want even more simplicity, I suggest you take a look at the <a href="https://github.com/jmoiron/sqlx">sqlx</a> package, which extend the standard sql package with some very usefull features. For example, instead of selecting a number of rows and scanning them row by row into a struct, sqlx allows you to do this:</p>
+<p>If you want even more simplicity, I suggest you take a look at the <a href="https://github.com/jmoiron/sqlx">sqlx</a> package, which extends the standard sql package with some very useful features. For example, instead of selecting a number of rows and scanning them row by row into a struct, sqlx allows you to do this:</p>
 
 <pre><code class="language-go">var test []Entity
 db.Select(&amp;test, &quot;SELECT * FROM entity&quot;)

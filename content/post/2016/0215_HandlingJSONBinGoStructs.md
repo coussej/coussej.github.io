@@ -66,7 +66,7 @@ func (p PropertyMap) Value() (driver.Value, error) {
 }
 ```
 
-Thats's it. Time for the second interface, *sql.Scanner*, which requires us to implement a *Scan* method. This method must take the raw data that comes from the database and transform it to our new type. In our case, the database will return JSONB ([]byte) that we must transform to our type (the reverse of what we did with *driver.Valuer*):
+That's it. Time for the second interface, *sql.Scanner*, which requires us to implement a *Scan* method. This method must take the raw data that comes from the database and transform it to our new type. In our case, the database will return JSONB ([]byte) that we must transform to our type (the reverse of what we did with *driver.Valuer*):
 
 ```go
 func (p *PropertyMap) Scan(src interface{}) error {
@@ -101,7 +101,7 @@ which results in
 {Id:1 Name:test entity 1 Description:a test entity for some guy's blog Properties:map[color:red width:3.1882420 length:120 country:Belgium hassomething:true]}
 ```
 
-If you want even more simplicity, I suggest you take a look at the [sqlx](https://github.com/jmoiron/sqlx) package, which extend the standard sql package with some very usefull features. For example, instead of selecting a number of rows and scanning them row by row into a struct, sqlx allows you to do this:
+If you want even more simplicity, I suggest you take a look at the [sqlx](https://github.com/jmoiron/sqlx) package, which extends the standard sql package with some very useful features. For example, instead of selecting a number of rows and scanning them row by row into a struct, sqlx allows you to do this:
 
 ```go
 var test []Entity

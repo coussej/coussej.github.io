@@ -163,8 +163,7 @@ db.Select(&amp;amp;test, &amp;quot;SELECT * FROM entity&amp;quot;)
 );
 CREATE TABLE entity_attribute (
   id          SERIAL PRIMARY KEY, 
-  name        TEXT, 
-  description TEXT
+  name        TEXT
 );
 CREATE TABLE entity_attribute_value (
   id                  SERIAL PRIMARY KEY, 

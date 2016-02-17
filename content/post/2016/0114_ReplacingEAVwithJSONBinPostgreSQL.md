@@ -37,8 +37,7 @@ CREATE TABLE entity (
 );
 CREATE TABLE entity_attribute (
   id          SERIAL PRIMARY KEY, 
-  name        TEXT, 
-  description TEXT
+  name        TEXT
 );
 CREATE TABLE entity_attribute_value (
   id                  SERIAL PRIMARY KEY, 

@@ -115,7 +115,7 @@ var test []Entity
 db.Select(&test, "SELECT * FROM entity")
 ```
 
-Ah, simplicity. 
+Ah, how minimal. 
 
 
 

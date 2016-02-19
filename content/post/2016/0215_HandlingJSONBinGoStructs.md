@@ -101,6 +101,13 @@ which results in
 {Id:1 Name:test entity 1 Description:a test entity for some guy's blog Properties:map[color:red width:3.1882420 length:120 country:Belgium hassomething:true]}
 ```
 
+Accessing an individual property can then be done as follows:
+
+```go
+width, ok := e.Properties["width"].(float64)
+color, ok := e.Properties["color"].(string)
+```
+
 If you want even more simplicity, I suggest you take a look at the [sqlx](https://github.com/jmoiron/sqlx) package, which extends the standard sql package with some very useful features. For example, instead of selecting a number of rows and scanning them row by row into a struct, sqlx allows you to do this:
 
 ```go

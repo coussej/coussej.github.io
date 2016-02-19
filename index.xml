@@ -122,7 +122,7 @@ color, ok := e.Properties[&amp;quot;color&amp;quot;].(string)
 db.Select(&amp;amp;test, &amp;quot;SELECT * FROM entity&amp;quot;)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Ah, simplicity.&lt;/p&gt;
+&lt;p&gt;Ah, how minimal.&lt;/p&gt;
 </description>
     </item>
     

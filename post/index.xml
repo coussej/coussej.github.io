@@ -110,6 +110,12 @@ fmt.Printf(&amp;quot;%+v\n&amp;quot;, e)
 &lt;pre&gt;&lt;code&gt;{Id:1 Name:test entity 1 Description:a test entity for some guy&#39;s blog Properties:map[color:red width:3.1882420 length:120 country:Belgium hassomething:true]}
 &lt;/code&gt;&lt;/pre&gt;
 
+&lt;p&gt;Accessing an individual property can then be done as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;width, ok := e.Properties[&amp;quot;width&amp;quot;].(float64)
+color, ok := e.Properties[&amp;quot;color&amp;quot;].(string)
+&lt;/code&gt;&lt;/pre&gt;
+
 &lt;p&gt;If you want even more simplicity, I suggest you take a look at the &lt;a href=&#34;https://github.com/jmoiron/sqlx&#34;&gt;sqlx&lt;/a&gt; package, which extends the standard sql package with some very useful features. For example, instead of selecting a number of rows and scanning them row by row into a struct, sqlx allows you to do this:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var test []Entity

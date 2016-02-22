@@ -106,16 +106,22 @@
 <p>That&rsquo;s it. Time for the second interface, <em>sql.Scanner</em>, which requires us to implement a <em>Scan</em> method. This method must take the raw data that comes from the database and transform it to our new type. In our case, the database will return JSONB ([]byte) that we must transform to our type (the reverse of what we did with <em>driver.Valuer</em>):</p>
 
 <pre><code class="language-go">func (p *PropertyMap) Scan(src interface{}) error {
-	var source []byte = src.([]byte)
+	source, ok := src.([]byte)
+	if !ok {
+		return errors.New(&quot;Type assertion .([]byte) failed.&quot;)
+	}
 
 	var i interface{}
 	err := json.Unmarshal(source, &amp;i)
-
 	if err != nil {
 		return err
 	}
 
-	*p = i.(map[string]interface{})
+	*p, ok = i.(map[string]interface{})
+	if !ok {
+		return errors.New(&quot;Type assertion .(map[string]interface{}) failed.&quot;)
+	}
+
 	return nil
 }
 </code></pre>

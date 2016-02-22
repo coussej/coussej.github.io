@@ -81,16 +81,22 @@
 &lt;p&gt;That&amp;rsquo;s it. Time for the second interface, &lt;em&gt;sql.Scanner&lt;/em&gt;, which requires us to implement a &lt;em&gt;Scan&lt;/em&gt; method. This method must take the raw data that comes from the database and transform it to our new type. In our case, the database will return JSONB ([]byte) that we must transform to our type (the reverse of what we did with &lt;em&gt;driver.Valuer&lt;/em&gt;):&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func (p *PropertyMap) Scan(src interface{}) error {
-	var source []byte = src.([]byte)
+	source, ok := src.([]byte)
+	if !ok {
+		return errors.New(&amp;quot;Type assertion .([]byte) failed.&amp;quot;)
+	}
 
 	var i interface{}
 	err := json.Unmarshal(source, &amp;amp;i)
-
 	if err != nil {
 		return err
 	}
 
-	*p = i.(map[string]interface{})
+	*p, ok = i.(map[string]interface{})
+	if !ok {
+		return errors.New(&amp;quot;Type assertion .(map[string]interface{}) failed.&amp;quot;)
+	}
+
 	return nil
 }
 &lt;/code&gt;&lt;/pre&gt;

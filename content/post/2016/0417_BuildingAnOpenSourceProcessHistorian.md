@@ -5,7 +5,7 @@ title = "Building An Open Source Process Historian"
 
 +++
 
-This post will explain how I built an open source alternative to the commercially available process historians, and the reasoning behind itcd hu	.
+This post will explain how I built an open source alternative to the commercially available process historians, and the reasoning behind it.
 
 ### Motivation
 I have been working in the field of industrial automation, more specifically on MES systems, for nearly four years now. The reason I started exploring the possibilities of an open source alternative to the commercial process historians was to address some issues or frustrations I have with them.

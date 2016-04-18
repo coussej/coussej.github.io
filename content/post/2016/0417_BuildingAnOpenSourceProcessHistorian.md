@@ -113,9 +113,9 @@ If you're not used to working in a UNIX-based environment, working with the comm
 First of all, it's free. You can do whatever you want with it. Every part of the stack is free and open source. You can add as many measurements as you want at no extra cost per tag. Secondly, it's all pretty slick. Both InfluxDB and Grafana leverage modern technologies that result in a nice end-user experience. Querying data is fast, dashboards can be easily created and shared within the company, and using the system requires nothing more than a recent browser.
 
 ### Conclusion
-I created this application and this post because I'd like to see the industrial software world approach things in a more open fashion. In the last few years, a lot of big companies have moved from closed, proprietary solutions to open, community-driven software. Even Microsoft has recently open-source the .NET framework, created an open development tool (Visual Studio Code) and is planning to bring SQL Server to Linux. I really want that the big industrial vendors will follow this trend, because in my opinion, the current way of working is focussed on keeping customers locked-in and is holding back innovation.
+I created this application and this post because I'd like to see the industrial software world approach things in a more open fashion. In the last few years, a lot of big companies have moved from closed, proprietary solutions to open, community-driven software. Even Microsoft has recently open-source the .NET framework, created an open development tool (Visual Studio Code) and is planning to bring SQL Server to Linux. I hope the big industrial vendors will follow this trend, because in my opinion, the current way of working is focussed on keeping customers locked-in and is holding back innovation.
 
-I hope that some like-minded people try this for themselves, making adjustments and adding features as they go. Although my solution works for me, I'm sure that there is still plenty of room for improvement!
+I'd also like some like-minded people to try this for themselves, making adjustments and adding features as they go. Although my solution works for me, I'm sure that there is still plenty of room for improvement!
 
-If you have any question, suggestion, or you just want to get more information, don't hesitate to drop me line!
+If you have any questions, suggestions, or you just want to get more information, don't hesitate to drop me line!
 

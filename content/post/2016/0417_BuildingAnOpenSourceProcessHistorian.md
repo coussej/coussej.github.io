@@ -5,7 +5,7 @@ title = "Building An Open Source Process Historian"
 
 +++
 
-This post will explain how I built an open source alternative to the commercially available process historians, and the reasoning behind it.
+This post will explain how I built an open source alternative to the commercially available process historians, and the reasoning behind itcd hu	.
 
 ### Motivation
 I have been working in the field of industrial automation, more specifically on MES systems, for nearly four years now. The reason I started exploring the possibilities of an open source alternative to the commercial process historians was to address some issues or frustrations I have with them.
@@ -98,9 +98,13 @@ If all goes well (and it should!), you will see your data appearing in InfluxDB.
 
 ### Result
 
-After testing it on a very basic test environment with a few thousand measurements per second (yes, second), I've installed this on a production system for monitoring some values in a Siemens PLC. It's been running for about a week now, without a single failure. We wanted to see how the pressure of two pumps reacted to the opening and closing of some valves, so we added the necessary measurements to the logger and created the dashboard below. Not bad, is it? :-)
+The company OPC Labs exposes a public OPC UA server with random data for testing purposes. I set up a test environment connected to this OPC server and managed to achieve a few thousand measurements per second (yes, second) without stressing the systems. This was with both the OPCUA and InfluxDB on a remote machine, so I image local speeds being much higher. Using the data collected from this demo server, I created a grafana dashboard to demonstrate some of the possibilities:
 
 ![Grafana dashboad](../../../../img/2016/0417_BuildingAnOpenSourceProcessHistorian/grafana.png)
+
+Not bad, eh?
+
+I'm currently testing this on a production system for monitoring some values in a Siemens PLC. It's been running for about a week now without a single failure or hiccup, so it looks very promising.
 
 #### Downsides
 If you're not used to working in a UNIX-based environment, working with the command line might seem a little scary. It is, actually, but when you get the hang of it you'll never want to go back. I love UNIX and Linux for it's "Do one thing, and do it well" philosophy. However, if you don't want to go there, you can install all of the above on a Windows box as well. Just be aware that my Ubuntu production box running this full stack is using only 400MB of RAM and 2,5 GB of diskspace. You can't get Windows running on that. Another possible downside is the file based configuration management, but maybe we can improve on that in the future.

@@ -5,7 +5,7 @@ title = "Building An Open Source Process Historian"
 
 +++
 
-This post will explain how I set up an open source alternative to the commercially available process historians, and the reasoning behind it.
+This post will explain how I built an open source alternative to the commercially available process historians, and the reasoning behind it.
 
 ### Motivation
 I have been working in the field of industrial automation, more specifically on MES systems, for nearly four years now. The reason I started exploring the possibilities of an open source alternative to the commercial process historians was to address some issues or frustrations I have with them.
@@ -61,7 +61,7 @@ When you browse to *http://yourServer:3000*, you should see Grafana running. In 
 
 So, now we have a platform for storing and visualizing time-series data. This brings us to the point where we have to put the word "process" back in our functional description, because PLC's don't talk HTTP. PLC's talk ProfiNET, Ethernet/IP, ... Most of the time this is solved by installing an OPC server for each brand of PLC you want to talk to. If you have any experience with OPC, you probably know what a pain it is to get OPC working over a network (usually, it means hours of struggling with Windows DCOM settings). Fortunately, the new version of OPC, OPC Unified Access, is a lot easier to work with, and it is platform independant. 
 
-As their was no OPCUA-to-InfluxDB logger readily available, I rolled my own. Using an open source implementation of the OPC-UA stack in javascript ([NodeOPCUA](http://node-opcua.github.io/)), I wrote an application that polls or monitors a number of PLC values on one side, and writes them to InfluxDB on the other side. Also, when InfluxDB is temporarily unavailable, it buffers the data in a local database. You can find the code [here](https://github.com/coussej/node-opcua-logger). To get it up and running you must first install NodeJS:
+As there was no OPCUA-to-InfluxDB logger readily available, I decided to roll my own. Using an open source implementation of the OPC-UA stack in javascript ([NodeOPCUA](http://node-opcua.github.io/)), I wrote an application that polls or monitors a number of PLC values on one side, and writes them to InfluxDB on the other side. Also, when InfluxDB is temporarily unavailable, it buffers the data in a local database. You can find the code [here](https://github.com/coussej/node-opcua-logger). To get it up and running you must first install NodeJS:
 
 ```
 $ curl https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash

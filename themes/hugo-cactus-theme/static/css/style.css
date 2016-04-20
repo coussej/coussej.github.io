@@ -282,7 +282,7 @@ p.small {
 
 blockquote {
 	padding-left: 15px;
-	border-left: 3px solid #eee;
+	border-left: 3px solid #2E9FFF;
 }
 
 hr {
@@ -373,7 +373,7 @@ img {
 Post List
 =========================================== */
 #post-list,#archive-list {
-	margin-top: 100px;
+	margin-top: 40px;
 }
 
 #post-list li,#archive-list li {

@@ -110,7 +110,7 @@ If you're not used to working in a UNIX-based environment, working with the comm
 Another possible downside is the file based configuration management, but I'm sure we can improve on that in the future.
 
 #### Upsides
-First of all, it's free. Free as in freedom and free as in beer. The first kind of free means you can do whatever you want with it. Every part of the stack is open source and you can modify it to your liking, if that's what you want. Also, each part is focussed on doing one thing: collecting data, storing data and visualizing data. If you want to switch one component for another (for example by using Chronograph instead of Grafana when it's more mature), you are free to do so. The second kind of free means you don't have to pay any money for it. Indeed, no licenses. You can add as many measurements as you like at no extra cost. 
+First of all, it's free. Free as in freedom and free as in beergit add . The first kind of free means you can do whatever you want with it. Every part of the stack is open source and you can modify it to your liking, if that's what you want. Also, each part is focussed on doing one thing: collecting data, storing data and visualizing data. If you want to switch one component for another (for example by using Chronograph instead of Grafana when it's more mature), you are free to do so. The second kind of free means you don't have to pay any money for it. Indeed, no licenses. You can add as many measurements as you like at no extra cost. 
 
 Another very important one: it's open. If you want to gather data from some obscure system, you can write a small collector for it that pushed the data over HTTP to InfluxDB. You can write that little collector in any programming language you want (or even a shell script) because making an HTTP request can be done from almost anywhere. This allows you to interface with nearly everything. 
 
@@ -121,5 +121,5 @@ I created this application and this post because I'd like to see the industrial 
 
 I'd also like some like-minded people to try this for themselves, making adjustments and adding features as they go. Although my solution works for me, I'm sure that there is still plenty of room for improvement!
 
-If you have any questions, suggestions, or you just want to get more information, don't hesitate to drop me line!
+If you have any questions, suggestions, or you just want to get more information, don't hesitate to drop me a line!
 

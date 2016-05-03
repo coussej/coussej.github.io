@@ -102,7 +102,7 @@ The company OPC Labs exposes a [public OPC UA server](http://www.opclabs.com/res
 
 Not bad, eh?
 
-I'm currently testing this on a production system for monitoring some values in a Siemens S7 PLC, using a Simatic NET v12 server. It's been running for about a week now without a single failure or hiccup, so it looks very promising.
+I'm currently testing this on a production system for monitoring some values in a Siemens S7 PLC, using a Simatic NET v12 server. It's been running for about three weeks now, without a single failure or hiccup, so it looks very promising.
 
 #### Downsides
 If you're not used to working in a UNIX-based environment, working with the command line might seem a little scary. It is, actually, but when you get the hang of it you'll never want to go back. I love UNIX and Linux for it's "Do one thing, and do it well" philosophy. However, if you don't want to go there, you can install all of the above on a Windows box as well. Just be aware that my Ubuntu production box running this full stack is using only 400MB of RAM and 2,5 GB of diskspace. You can't get Windows running on that. 
@@ -110,9 +110,9 @@ If you're not used to working in a UNIX-based environment, working with the comm
 Another possible downside is the file based configuration management, but I'm sure we can improve on that in the future.
 
 #### Upsides
-First of all, it's free. Free as in freedom and free as in beergit add . The first kind of free means you can do whatever you want with it. Every part of the stack is open source and you can modify it to your liking, if that's what you want. Also, each part is focussed on doing one thing: collecting data, storing data and visualizing data. If you want to switch one component for another (for example by using Chronograph instead of Grafana when it's more mature), you are free to do so. The second kind of free means you don't have to pay any money for it. Indeed, no licenses. You can add as many measurements as you like at no extra cost. 
+First of all, it's free. Free as in freedom and free as in beer. The first kind of free means you can do whatever you want with it. Every part of the stack is open source and you can modify it to your liking, if that's what you want. Also, each part is focussed on doing one thing: collecting data, storing data and visualizing data. If you want to switch one component for another (for example by using Chronograph instead of Grafana when it's more mature), you are free to do so. The second kind of free (as in beer) means you don't have to pay any money for it. Indeed, no licenses. You can add as many measurements as you like at no extra cost. 
 
-Another very important one: it's open. If you want to gather data from some obscure system, you can write a small collector for it that pushed the data over HTTP to InfluxDB. You can write that little collector in any programming language you want (or even a shell script) because making an HTTP request can be done from almost anywhere. This allows you to interface with nearly everything. 
+Another very important one: it's open. If you want to gather data from some obscure system, you can write a small collector for it that pushes the data over HTTP to InfluxDB. You can write that little collector in any programming language you want (or even a shell script) because making an HTTP request can be done from almost anywhere. This allows you to interface with nearly everything. 
 
 Finally, I think it's all pretty slick. The easy installation (just a few commands) results in a reproducible environment. Both InfluxDB and Grafana leverage modern technologies that result in a nice end-user experience. Querying data is fast, dashboards can be easily created and shared within the company, and using the system requires nothing more than a recent browser. 
 

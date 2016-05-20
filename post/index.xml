@@ -6,8 +6,139 @@
     <description>Recent content in Posts on coussej</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 16 Feb 2016 10:33:11 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 18 Apr 2016 08:41:25 +0000</lastBuildDate>
     <atom:link href="http://coussej.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Building An Open Source Process Historian</title>
+      <link>http://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/</link>
+      <pubDate>Mon, 18 Apr 2016 08:41:25 +0000</pubDate>
+      
+      <guid>http://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/</guid>
+      <description>
+
+&lt;p&gt;This post will explain how and why I built a open source process historian.&lt;/p&gt;
+
+&lt;h3 id=&#34;motivation:5edadc4035440b9febb5d8290a475d8c&#34;&gt;Motivation&lt;/h3&gt;
+
+&lt;p&gt;I have been working in the field of industrial automation, more specifically on MES systems, for nearly four years now. The reason I started exploring the possibilities of an open source alternative for the commercial process historians was to address some of the issues and frustrations I have with them.&lt;/p&gt;
+
+&lt;p&gt;One of those frustrations is that choosing a historian from one of the popular industrial vendors implies a serious vendor lock-in from the very beginning. For starting, they&amp;rsquo;re Windows only, meaning you are already tied to the Mircosoft ecosystem. Of course, Windows is not necessarily bad, but sometimes it is just not the right choice in the server space (even Microsoft itself is starting to realize this, see &lt;a href=&#34;http://blogs.microsoft.com/blog/2016/03/07/announcing-sql-server-on-linux/&#34;&gt;here&lt;/a&gt; and &lt;a href=&#34;https://blogs.windows.com/buildingapps/2016/03/30/run-bash-on-ubuntu-on-windows/&#34;&gt;here&lt;/a&gt;). An ideal solution would be platform independent. Also, commercial historians usually integrate well with the respective visualization or MES solution of the same vendor, but not with other external software. This limits you to buying from the same vendor, even if a component from a different vendor is more fit-for-purpose. A good historian (and in general, any other software component) should have a simple, open API for other software to interface with.&lt;/p&gt;
+
+&lt;p&gt;Another issue is the visualization layer. Most of the solutions I&amp;rsquo;ve worked with are not very user-friendly, and require additional client software or specific Java versions to run their applet in a very outdated version of Internet Explorer. Ideally, the visualization should be both easy to work with, and require no dependencies on the client side.&lt;/p&gt;
+
+&lt;h3 id=&#34;approach:5edadc4035440b9febb5d8290a475d8c&#34;&gt;Approach&lt;/h3&gt;
+
+&lt;p&gt;When you go to the Wikipedia page for &lt;a href=&#34;https://en.wikipedia.org/wiki/Operational_historian&#34;&gt;operational historian&lt;/a&gt;, the first sentence summarizes its main function:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Operational historian refers to a database software application that logs or historizes time-based process data.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;But we already knew that. What&amp;rsquo;s interesting however, is that when you look closely at that summary, the only thing that makes it specific to industrial automation is the word &amp;ldquo;process&amp;rdquo;. So I dropped the &amp;ldquo;process&amp;rdquo; part and started looking for software that could fill in the functionality described by the other 14 words. You probably already guessed it, but people outside of the industrial world are also collecting and storing time-series data. Their interests are more in the fields of server monitoring and application analytics, but the principle is essentially the same. Even better, the scale they work at is even larger than what is typically required for most industrial companies. I&amp;rsquo;m talking tens of thousands of writes per second, which should be more than enough for competing with the current standards.&lt;/p&gt;
+
+&lt;h4 id=&#34;storing-the-time-series-data:5edadc4035440b9febb5d8290a475d8c&#34;&gt;Storing the time-series data&lt;/h4&gt;
+
+&lt;p&gt;One of those time-series databases is &lt;a href=&#34;https://influxdata.com/&#34;&gt;InfluxDB&lt;/a&gt;. The company behind it, InfluxData, is a YCombinator backed startup that has managed to produce a very mature product in a relatively short time, and it is already being used at major companies like ebay and Google. The database is extremely easy to set up, requires no external dependencies, has a SQL like query syntax and is fully open source. Furthermore, reading and writing data is done by means of HTTP requests, so you can very easily interface with it! All of these features combined make it a good fit for what I want to achieve.&lt;/p&gt;
+
+&lt;p&gt;To demonstrate how easy it is to install InfluxDB, I&amp;rsquo;ll take you through the installation procedure. First, get yourself a standard Ubuntu 14.04 LTS server (or similar). Then, tell the apt-get package manager where to look for InfluxDB by executing these commands:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl -sL https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+$ source /etc/lsb-release
+$ echo &amp;quot;deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable&amp;quot; | sudo tee /etc/apt/sources.list.d/influxdb.list
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Update the package list, install InfluxDB and start the service.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo apt-get update &amp;amp;&amp;amp; sudo apt-get install influxdb
+$ sudo service influxdb start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s it. It took less than a minute, which is peanuts compared to the time it usually takes to install &lt;em&gt;&amp;ndash; insert industrial software package here &amp;ndash;&lt;/em&gt;. When you browse to &lt;em&gt;&lt;a href=&#34;http://yourServer:8083&#34;&gt;http://yourServer:8083&lt;/a&gt;&lt;/em&gt;, you&amp;rsquo;ll see the influxDB admin page.&lt;/p&gt;
+
+&lt;h4 id=&#34;visualizing-data:5edadc4035440b9febb5d8290a475d8c&#34;&gt;Visualizing data&lt;/h4&gt;
+
+&lt;p&gt;InfluxDB has its own visualization tool, Chronograf, but after trying it I found that it currently lacks some features and it is not mature enough yet for a robust solution. Then I found &lt;a href=&#34;http://grafana.org/&#34;&gt;Grafana&lt;/a&gt;, a large open-source project with the single purpose of providing an easy way of visualizing time-series data in a meaningful way. It provides you with a well thought-out web-based interface, different graph types and the possibility to create beautiful dashboards. It&amp;rsquo;s already close to 3.0, and after using it for a while I can only say it feels like a very mature product. Moreover, InfluxDB is supported as a datasource out of the box.&lt;/p&gt;
+
+&lt;p&gt;Installing and starting Grafana (v3.0 beta) also took less than a minute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ wget https://grafanarel.s3.amazonaws.com/builds/grafana_3.0.0-beta51460725904_amd64.deb
+$ sudo apt-get install -y adduser libfontconfig
+$ sudo dpkg -i grafana_3.0.0-beta51460725904_amd64.deb
+$ sudo service grafana-server start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you browse to &lt;em&gt;&lt;a href=&#34;http://yourServer:3000&#34;&gt;http://yourServer:3000&lt;/a&gt;&lt;/em&gt;, you should see Grafana running. In the admin section, add InfluxDB as a datasource, and you&amp;rsquo;re good to go.&lt;/p&gt;
+
+&lt;h4 id=&#34;collecting-the-data:5edadc4035440b9febb5d8290a475d8c&#34;&gt;Collecting the data.&lt;/h4&gt;
+
+&lt;p&gt;So, now we have a platform for storing and visualizing time-series data. This brings us to the point where we have to put the word &amp;ldquo;process&amp;rdquo; back in our functional description, because PLC&amp;rsquo;s don&amp;rsquo;t talk HTTP. PLC&amp;rsquo;s talk ProfiNET, Ethernet/IP, &amp;hellip; Most of the time this is solved by installing an OPC server for each brand of PLC you want to talk to. If you have any experience with OPC, you probably know what a pain it is to get OPC working over a network (usually, it means hours of struggling with Windows DCOM settings). Fortunately, the new version of OPC, OPC Unified Access, is a lot easier to work with, and it is platform independent.&lt;/p&gt;
+
+&lt;p&gt;As there was no OPCUA-to-InfluxDB logger readily available, I decided to roll my own. Using an open source implementation of the OPC-UA stack in javascript (&lt;a href=&#34;http://node-opcua.github.io/&#34;&gt;NodeOPCUA&lt;/a&gt;, another fantastic open source effort!), I wrote an application that polls or monitors a number of PLC values on one side, and writes them to InfluxDB on the other side. Also, when InfluxDB is temporarily unavailable, it buffers the data in a local database. You can find the code &lt;a href=&#34;https://github.com/coussej/node-opcua-logger&#34;&gt;here&lt;/a&gt;. To get it up and running you must first install NodeJS, the server-side javascript platform:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
+$ nvm install 5.10.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, download and install the logger:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git clone https://github.com/coussej/node-opcua-logger.git
+$ cd node-opcua-logger
+$ npm install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Modify the config.toml file to your need, as specified in the instructions. You&amp;rsquo;ll have to point it to your OPC Server and your InfluxDB instance, and for each value you want to measure you must repeat the [[measurements]] section. Say you want to read the temperature of an equipment called &amp;ldquo;TANK42&amp;rdquo; from a Siemens PLC every 5 seconds, you&amp;rsquo;ll have to add this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[[measurements]]
+name               = &amp;quot;temperature&amp;quot;
+tags               = { equipment = &amp;quot;TANK42&amp;quot; }
+nodeId             = &amp;quot;ns=3;s=PLC_TANKS.db103.16,r&amp;quot;
+collectionType     = &amp;quot;polled&amp;quot;
+pollRate           = 12     # samples / minute.
+deadbandAbsolute   = 0      # Absolute max difference for a value not to be collected
+deadbandRelative   = 0.0    # Relative max difference for a value not to be collected
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, just start the logger:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;node logger.js
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If all goes well (and it should!), you will see your data appearing in InfluxDB.&lt;/p&gt;
+
+&lt;h3 id=&#34;result:5edadc4035440b9febb5d8290a475d8c&#34;&gt;Result&lt;/h3&gt;
+
+&lt;p&gt;The company OPC Labs exposes a &lt;a href=&#34;http://www.opclabs.com/resources/product-information/articles/1094-public-demo-opc-xml-da-server-2&#34;&gt;public OPC UA server&lt;/a&gt; with random data for testing purposes. I set up a test environment connected to this OPC server and managed to achieve a few thousand measurements per second (yes, second) without even stressing the systems. This was with both the OPCUA and InfluxDB on a remote machine, so I imagine local speeds being much higher. Using the data collected from this demo server, I created a grafana dashboard to demonstrate some of the possibilities Grafana provides for the visualization:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;../../../../img/2016/0417_BuildingAnOpenSourceProcessHistorian/grafana.png&#34; alt=&#34;Grafana dashboad&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Not bad, eh?&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m currently testing this on a production system for monitoring some values in a Siemens S7 PLC, using a Simatic NET v12 server. It&amp;rsquo;s been running for more then a month now without a single failure, so it looks very promising.&lt;/p&gt;
+
+&lt;h4 id=&#34;downsides:5edadc4035440b9febb5d8290a475d8c&#34;&gt;Downsides&lt;/h4&gt;
+
+&lt;p&gt;If you&amp;rsquo;re not used to working in a UNIX-based environment, working with the command line might seem a little scary. It is, actually, but when you get the hang of it you&amp;rsquo;ll never want to go back. I love UNIX and Linux for it&amp;rsquo;s &amp;ldquo;Do one thing, and do it well&amp;rdquo; philosophy. However, if you don&amp;rsquo;t want to go there, you can install all of the above on a Windows box as well. Just be aware that my Ubuntu production box running this full stack is using only 400MB of RAM and 2,5 GB of diskspace. You can&amp;rsquo;t get Windows running on that.&lt;/p&gt;
+
+&lt;p&gt;Another possible downside is the file based configuration management, but I&amp;rsquo;m sure we can improve on that in the future.&lt;/p&gt;
+
+&lt;h4 id=&#34;upsides:5edadc4035440b9febb5d8290a475d8c&#34;&gt;Upsides&lt;/h4&gt;
+
+&lt;p&gt;First of all, it&amp;rsquo;s free. Free as in freedom and free as in beer. The first kind of free means you can do whatever you want with it. Every part of the stack is open source and you can modify it to your liking, if that&amp;rsquo;s what you want. Also, each part is focussed on doing one thing: collecting data, storing data and visualizing data. If you want to switch one component for another (for example by using Chronograph instead of Grafana when it&amp;rsquo;s more mature), you are free to do so. The second kind of free (as in beer) means you don&amp;rsquo;t have to pay any money for it. Indeed, no licenses, neither for the OS nor the different software components. You can add as many measurements as you like at no extra cost. This, combined with the very easy installation, should lower the treshold for companies to try it out.&lt;/p&gt;
+
+&lt;p&gt;Another very important one: it&amp;rsquo;s open. If you want to gather data from some obscure system, you can write a small collector for it that pushes the data over HTTP to InfluxDB. You can write that little collector in any programming language you want (or even a shell script) because making an HTTP request can be done from almost anywhere. This allows you to interface with nearly everything, without being stuck in the toolset or programming language your vendor supplies an SDK for.&lt;/p&gt;
+
+&lt;p&gt;Finally, I think it&amp;rsquo;s all pretty slick. The easy installation (just a few commands) results in a reproducible environment. Both InfluxDB and Grafana leverage modern technologies that result in a nice end-user experience. Querying data is fast, dashboards can be easily created and shared within the company, and using the system requires nothing more than a recent browser.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion:5edadc4035440b9febb5d8290a475d8c&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;I created this application and this post because I&amp;rsquo;d like to see the industrial software world approach things in a more open fashion. In the last few years, a lot of big companies have moved from closed, proprietary solutions to open, community-driven software. Even Microsoft has recently open-source the .NET framework, created an open development tool (Visual Studio Code) and is planning to bring SQL Server to Linux. I hope the big industrial vendors will follow this trend, because in my opinion, the current way of working is focussed on keeping customers locked-in and is holding back innovation.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;d also like some like-minded people to try this for themselves, making adjustments and adding features as they go. Although my solution works for me, I&amp;rsquo;m sure that there is still plenty of room for improvement!&lt;/p&gt;
+
+&lt;p&gt;If you have any questions, suggestions, or you just want to get more information, don&amp;rsquo;t hesitate to drop me a line!&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Handling JSONB in Go Structs</title>

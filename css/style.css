@@ -51,7 +51,7 @@ margin-bottom: 20px;
 html, body { height: 100%; }
 
 body {
-	font:16px/1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font:16px/1 "Open Sans", Helvetica, Arial, sans-serif;
 	color: #666;
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
@@ -99,7 +99,7 @@ h2 {
 }
 
 .profile h2 {
-	font-size: 20px;
+	font-size: 16px;
 	  font-weight: 300;
 	  color: #aaa;
 	  margin-top: 10px;
@@ -139,7 +139,7 @@ nav.main-nav a.cta {
 }
 
 #wrapper {
-  max-width: 800px;
+  max-width: 700px;
   margin: 0 auto;
   padding: 60px 40px 100px 40px;
 }
@@ -282,7 +282,7 @@ p.small {
 
 blockquote {
 	padding-left: 15px;
-	border-left: 3px solid #eee;
+	border-left: 3px solid #2E9FFF;
 }
 
 hr {
@@ -306,7 +306,7 @@ pre	{
 	border-radius: 3px;
 	background: #272b2d;
 	  font-family: 'Source Code Pro',Menlo,monospace;
-	  font-size: 13px;
+	  font-size: 12px;
 	  line-height: 1.5em;
 	  font-weight: 500;
 	color: #d0d4d7;
@@ -373,7 +373,7 @@ img {
 Post List
 =========================================== */
 #post-list,#archive-list {
-	margin-top: 100px;
+	margin-top: 40px;
 }
 
 #post-list li,#archive-list li {

@@ -5,7 +5,7 @@ title = "Building An Open Source Process Historian"
 
 +++
 
-This post will explain how and why I built a simple, open source process historian.
+This post will explain how and why I built a open source process historian.
 
 ### Motivation
 I have been working in the field of industrial automation, more specifically on MES systems, for nearly four years now. The reason I started exploring the possibilities of an open source alternative for the commercial process historians was to address some of the issues and frustrations I have with them.
@@ -59,7 +59,7 @@ When you browse to *http://yourServer:3000*, you should see Grafana running. In 
 
 So, now we have a platform for storing and visualizing time-series data. This brings us to the point where we have to put the word "process" back in our functional description, because PLC's don't talk HTTP. PLC's talk ProfiNET, Ethernet/IP, ... Most of the time this is solved by installing an OPC server for each brand of PLC you want to talk to. If you have any experience with OPC, you probably know what a pain it is to get OPC working over a network (usually, it means hours of struggling with Windows DCOM settings). Fortunately, the new version of OPC, OPC Unified Access, is a lot easier to work with, and it is platform independent. 
 
-As there was no OPCUA-to-InfluxDB logger readily available, I decided to roll my own. Using an open source implementation of the OPC-UA stack in javascript ([NodeOPCUA](http://node-opcua.github.io/)), I wrote an application that polls or monitors a number of PLC values on one side, and writes them to InfluxDB on the other side. Also, when InfluxDB is temporarily unavailable, it buffers the data in a local database. You can find the code [here](https://github.com/coussej/node-opcua-logger). To get it up and running you must first install NodeJS, the server-side javascript platform:
+As there was no OPCUA-to-InfluxDB logger readily available, I decided to roll my own. Using an open source implementation of the OPC-UA stack in javascript ([NodeOPCUA](http://node-opcua.github.io/), another fantastic open source effort!), I wrote an application that polls or monitors a number of PLC values on one side, and writes them to InfluxDB on the other side. Also, when InfluxDB is temporarily unavailable, it buffers the data in a local database. You can find the code [here](https://github.com/coussej/node-opcua-logger). To get it up and running you must first install NodeJS, the server-side javascript platform:
 
 ```
 $ curl https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
@@ -102,7 +102,7 @@ The company OPC Labs exposes a [public OPC UA server](http://www.opclabs.com/res
 
 Not bad, eh?
 
-I'm currently testing this on a production system for monitoring some values in a Siemens S7 PLC, using a Simatic NET v12 server. It's been running for about three weeks now, without a single failure or hiccup, so it looks very promising.
+I'm currently testing this on a production system for monitoring some values in a Siemens S7 PLC, using a Simatic NET v12 server. It's been running for more then a month now without a single failure, so it looks very promising.
 
 #### Downsides
 If you're not used to working in a UNIX-based environment, working with the command line might seem a little scary. It is, actually, but when you get the hang of it you'll never want to go back. I love UNIX and Linux for it's "Do one thing, and do it well" philosophy. However, if you don't want to go there, you can install all of the above on a Windows box as well. Just be aware that my Ubuntu production box running this full stack is using only 400MB of RAM and 2,5 GB of diskspace. You can't get Windows running on that. 
@@ -110,9 +110,9 @@ If you're not used to working in a UNIX-based environment, working with the comm
 Another possible downside is the file based configuration management, but I'm sure we can improve on that in the future.
 
 #### Upsides
-First of all, it's free. Free as in freedom and free as in beer. The first kind of free means you can do whatever you want with it. Every part of the stack is open source and you can modify it to your liking, if that's what you want. Also, each part is focussed on doing one thing: collecting data, storing data and visualizing data. If you want to switch one component for another (for example by using Chronograph instead of Grafana when it's more mature), you are free to do so. The second kind of free (as in beer) means you don't have to pay any money for it. Indeed, no licenses. You can add as many measurements as you like at no extra cost. 
+First of all, it's free. Free as in freedom and free as in beer. The first kind of free means you can do whatever you want with it. Every part of the stack is open source and you can modify it to your liking, if that's what you want. Also, each part is focussed on doing one thing: collecting data, storing data and visualizing data. If you want to switch one component for another (for example by using Chronograph instead of Grafana when it's more mature), you are free to do so. The second kind of free (as in beer) means you don't have to pay any money for it. Indeed, no licenses, neither for the OS nor the different software components. You can add as many measurements as you like at no extra cost. This, combined with the very easy installation, should lower the treshold for companies to try it out. 
 
-Another very important one: it's open. If you want to gather data from some obscure system, you can write a small collector for it that pushes the data over HTTP to InfluxDB. You can write that little collector in any programming language you want (or even a shell script) because making an HTTP request can be done from almost anywhere. This allows you to interface with nearly everything. 
+Another very important one: it's open. If you want to gather data from some obscure system, you can write a small collector for it that pushes the data over HTTP to InfluxDB. You can write that little collector in any programming language you want (or even a shell script) because making an HTTP request can be done from almost anywhere. This allows you to interface with nearly everything, without being stuck in the toolset or programming language your vendor supplies an SDK for.
 
 Finally, I think it's all pretty slick. The easy installation (just a few commands) results in a reproducible environment. Both InfluxDB and Grafana leverage modern technologies that result in a nice end-user experience. Querying data is fast, dashboards can be easily created and shared within the company, and using the system requires nothing more than a recent browser. 
 

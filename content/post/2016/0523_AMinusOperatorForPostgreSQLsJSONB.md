@@ -5,7 +5,7 @@ title = "A Minus Operator For PostgreSQL's JSONB"
 
 +++
 
-Those who are familiar with the PostgreSQL [hstore](http://www.postgresql.org/docs/current/static/hstore.html) extension will probably know that you have the possibility to delete matching pairs from 2 hstore objects by substractiong them from one another:
+Those who are familiar with the PostgreSQL [hstore](http://www.postgresql.org/docs/current/static/hstore.html) extension will probably know that you have the possibility to delete matching pairs from 2 hstore objects by substracting them from one another:
 
 ```
 SELECT 'a=>1, b=>2, c=>3'::hstore - 'a=>4, b=>2'::hstore

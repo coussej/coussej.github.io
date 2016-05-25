@@ -15,7 +15,7 @@
       <pubDate>Tue, 24 May 2016 14:51:08 +0000</pubDate>
       
       <guid>http://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/</guid>
-      <description>&lt;p&gt;Those who are familiar with the PostgreSQL &lt;a href=&#34;http://www.postgresql.org/docs/current/static/hstore.html&#34;&gt;hstore&lt;/a&gt; extension will probably know that you have the possibility to delete matching pairs from 2 hstore objects by substractiong them from one another:&lt;/p&gt;
+      <description>&lt;p&gt;Those who are familiar with the PostgreSQL &lt;a href=&#34;http://www.postgresql.org/docs/current/static/hstore.html&#34;&gt;hstore&lt;/a&gt; extension will probably know that you have the possibility to delete matching pairs from 2 hstore objects by substracting them from one another:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;SELECT &#39;a=&amp;gt;1, b=&amp;gt;2, c=&amp;gt;3&#39;::hstore - &#39;a=&amp;gt;4, b=&amp;gt;2&#39;::hstore
 &lt;/code&gt;&lt;/pre&gt;

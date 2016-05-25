@@ -41,7 +41,7 @@
                     <h2 class="headline">May 24, 2016</h2>
                 </header>
                 <section id="post-body">
-                    <p>Those who are familiar with the PostgreSQL <a href="http://www.postgresql.org/docs/current/static/hstore.html">hstore</a> extension will probably know that you have the possibility to delete matching pairs from 2 hstore objects by substractiong them from one another:</p>
+                    <p>Those who are familiar with the PostgreSQL <a href="http://www.postgresql.org/docs/current/static/hstore.html">hstore</a> extension will probably know that you have the possibility to delete matching pairs from 2 hstore objects by substracting them from one another:</p>
 
 <pre><code>SELECT 'a=&gt;1, b=&gt;2, c=&gt;3'::hstore - 'a=&gt;4, b=&gt;2'::hstore
 </code></pre>

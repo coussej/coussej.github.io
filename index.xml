@@ -6,8 +6,110 @@
     <description>Recent content on coussej</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 18 Apr 2016 08:41:25 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 24 May 2016 14:51:08 +0000</lastBuildDate>
     <atom:link href="http://coussej.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>A Minus Operator For PostgreSQL&#39;s JSONB</title>
+      <link>http://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/</link>
+      <pubDate>Tue, 24 May 2016 14:51:08 +0000</pubDate>
+      
+      <guid>http://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/</guid>
+      <description>&lt;p&gt;Those who are familiar with the PostgreSQL &lt;a href=&#34;http://www.postgresql.org/docs/current/static/hstore.html&#34;&gt;hstore&lt;/a&gt; extension will probably know that you have the possibility to delete matching pairs from 2 hstore objects by substractiong them from one another:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT &#39;a=&amp;gt;1, b=&amp;gt;2, c=&amp;gt;3&#39;::hstore - &#39;a=&amp;gt;4, b=&amp;gt;2&#39;::hstore
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which results in&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;quot;a&amp;quot;=&amp;gt;&amp;quot;1&amp;quot;, &amp;quot;c&amp;quot;=&amp;gt;&amp;quot;3&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is particularly usefull for audit triggers that store the row data in a hstore column, where you can easily see which columns were changed and to what by substracting the new row from the old row (as hstore of course):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;hstore(NEW_ROW) - hstore(OLD_ROW)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;JSONB on the other hand does not have such an operator, which is unfortunate as many people are looking at JSONB for use cases where before they would choose hstore. Luckily, PostgreSQL allows you to create custom operators, which gives you the possibility to create a minus operator for JSONB yourself.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Update: After I wrote this, I found &lt;a href=&#34;http://schinckel.net/2014/09/29/adding-json(b)-operators-to-postgresql/&#34;&gt;another implementation&lt;/a&gt; for this functionality. However, that one does not provide a way to also include nested jsonb objects, and this one does (see below).&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;First, let&amp;rsquo;s create a function that gives us the desired result:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CREATE OR REPLACE FUNCTION jsonb_minus ( arg1 jsonb, arg2 jsonb ) RETURNS jsonb
+AS $$
+
+SELECT 
+	COALESCE(json_object_agg(key, value), &#39;{}&#39;)::jsonb
+FROM 
+	jsonb_each(arg1)
+WHERE 
+	arg1 -&amp;gt; key &amp;lt;&amp;gt; arg2 -&amp;gt; key 
+	OR arg2 -&amp;gt; key IS NULL
+
+$$ LANGUAGE SQL;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s break this down. The &lt;strong&gt;jsonb_each&lt;/strong&gt; function returns a table with colums &lt;em&gt;key (text)&lt;/em&gt; and &lt;em&gt;value (jsonb)&lt;/em&gt;, with a row for each key in the argument. From that table, we only keep the rows for which the keys have a different value in &lt;em&gt;arg1&lt;/em&gt; than in &lt;em&gt;arg2&lt;/em&gt;, or keys that are not present in &lt;em&gt;arg2&lt;/em&gt;. With the remaining rows, we build a new jsonb object using the &lt;strong&gt;json_object_agg&lt;/strong&gt; function. If there are no rows, this function will return &lt;em&gt;NULL&lt;/em&gt;, which is why the function is surrounded by COALESCE to return an empty JSONB object in that case.&lt;/p&gt;
+
+&lt;p&gt;After this, we can turn this into an actual operator by executing the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CREATE OPERATOR - (
+    PROCEDURE = jsonb_minus,
+    LEFTARG   = jsonb,
+    RIGHTARG  = jsonb )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you can just use the &lt;strong&gt;-&lt;/strong&gt; operator like you would do with hstore. Let&amp;rsquo;s look at the result:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT &#39;{&amp;quot;a&amp;quot;:1, &amp;quot;b&amp;quot;:{&amp;quot;c&amp;quot;:123, &amp;quot;d&amp;quot;:&amp;quot;test&amp;quot;}}&#39;::jsonb 
+	- &#39;{&amp;quot;a&amp;quot;:1, &amp;quot;b&amp;quot;:{&amp;quot;c&amp;quot;:321, &amp;quot;d&amp;quot;:&amp;quot;test&amp;quot;}}&#39;::jsonb
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;results in&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{&amp;quot;b&amp;quot;: {&amp;quot;c&amp;quot;: 123, &amp;quot;d&amp;quot;: &amp;quot;test&amp;quot;}}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Great! &amp;ldquo;a&amp;rdquo; was removed from arg1 as it had the same value, &amp;ldquo;b&amp;rdquo; is still there as it has a different value. But only &amp;ldquo;b&amp;rdquo;-&amp;gt;&amp;ldquo;c&amp;rdquo; is different, yet &amp;ldquo;b&amp;rdquo;-&amp;gt;&amp;ldquo;d&amp;rdquo; is still there. This is because our function only works on the first level of the json object. With a little more effort, we can expand it so that it recursively looks into all the nested properties as well:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CREATE OR REPLACE FUNCTION jsonb_minus ( arg1 jsonb, arg2 jsonb )
+ RETURNS jsonb
+AS $$
+
+SELECT 
+	COALESCE(json_object_agg(
+        key,
+        CASE
+            -- if the value is an object and the value of the second argument is
+            -- not null, we do a recursion
+            WHEN jsonb_typeof(value) = &#39;object&#39; AND arg2 -&amp;gt; key IS NOT NULL 
+			THEN jsonb_minus(value, arg2 -&amp;gt; key)
+            -- for all the other types, we just return the value
+            ELSE value
+        END
+    ), &#39;{}&#39;)::jsonb
+FROM 
+	jsonb_each(arg1)
+WHERE 
+	arg1 -&amp;gt; key &amp;lt;&amp;gt; arg2 -&amp;gt; key 
+	OR arg2 -&amp;gt; key IS NULL
+
+$$ LANGUAGE SQL;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead of just selecting the value, we now check if the value is a json object. If it is, we call jsonb_minus recursively to substract the nested objects from one another.&lt;/p&gt;
+
+&lt;p&gt;Executing the example from earlier now gives us:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{&amp;quot;b&amp;quot;: {&amp;quot;c&amp;quot;: 123}}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, the function now also works for nested jsonb properties.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Building An Open Source Process Historian</title>

@@ -1,0 +1,266 @@
+    <!DOCTYPE html>
+<html lang="en-us">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Jeroen Coussement">
+		<meta name="description" content="Thoughts and Ideas">
+		<meta name="generator" content="Hugo 0.16-DEV" />
+		<title>A Minus Operator For PostgreSQL&#39;s JSONB &middot; coussej</title>
+		<link rel="shortcut icon" href="http://coussej.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="http://coussej.github.io/css/style.css">
+		<link rel="stylesheet" href="http://coussej.github.io/css/highlight.css">
+		<link rel="stylesheet" href="http://coussej.github.io/css/monosocialiconsfont.css">
+		
+		<link href="http://coussej.github.io/index.xml" rel="alternate" type="application/rss+xml" title="coussej" />
+		
+		<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='http://coussej.github.io/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+		<a href='http://coussej.github.io/about'>About</a>
+	
+
+	
+	<a class="cta" href="http://coussej.github.io/index.xml">Subscribe</a>
+	
+</nav>
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>A Minus Operator For PostgreSQL&#39;s JSONB</h1>
+                    <h2 class="headline">May 24, 2016</h2>
+                </header>
+                <section id="post-body">
+                    <p>Those who are familiar with the PostgreSQL <a href="http://www.postgresql.org/docs/current/static/hstore.html">hstore</a> extension will probably know that you have the possibility to delete matching pairs from 2 hstore objects by substractiong them from one another:</p>
+
+<pre><code>SELECT 'a=&gt;1, b=&gt;2, c=&gt;3'::hstore - 'a=&gt;4, b=&gt;2'::hstore
+</code></pre>
+
+<p>which results in</p>
+
+<pre><code>&quot;a&quot;=&gt;&quot;1&quot;, &quot;c&quot;=&gt;&quot;3&quot;
+</code></pre>
+
+<p>This is particularly usefull for audit triggers that store the row data in a hstore column, where you can easily see which columns were changed and to what by substracting the new row from the old row (as hstore of course):</p>
+
+<pre><code>hstore(NEW_ROW) - hstore(OLD_ROW)
+</code></pre>
+
+<p>JSONB on the other hand does not have such an operator, which is unfortunate as many people are looking at JSONB for use cases where before they would choose hstore. Luckily, PostgreSQL allows you to create custom operators, which gives you the possibility to create a minus operator for JSONB yourself.</p>
+
+<blockquote>
+<p>Update: After I wrote this, I found <a href="http://schinckel.net/2014/09/29/adding-json(b)-operators-to-postgresql/">another implementation</a> for this functionality. However, that one does not provide a way to also include nested jsonb objects, and this one does (see below).</p>
+</blockquote>
+
+<p>First, let&rsquo;s create a function that gives us the desired result:</p>
+
+<pre><code>CREATE OR REPLACE FUNCTION jsonb_minus ( arg1 jsonb, arg2 jsonb ) RETURNS jsonb
+AS $$
+
+SELECT 
+	COALESCE(json_object_agg(key, value), '{}')::jsonb
+FROM 
+	jsonb_each(arg1)
+WHERE 
+	arg1 -&gt; key &lt;&gt; arg2 -&gt; key 
+	OR arg2 -&gt; key IS NULL
+
+$$ LANGUAGE SQL;
+</code></pre>
+
+<p>Let&rsquo;s break this down. The <strong>jsonb_each</strong> function returns a table with colums <em>key (text)</em> and <em>value (jsonb)</em>, with a row for each key in the argument. From that table, we only keep the rows for which the keys have a different value in <em>arg1</em> than in <em>arg2</em>, or keys that are not present in <em>arg2</em>. With the remaining rows, we build a new jsonb object using the <strong>json_object_agg</strong> function. If there are no rows, this function will return <em>NULL</em>, which is why the function is surrounded by COALESCE to return an empty JSONB object in that case.</p>
+
+<p>After this, we can turn this into an actual operator by executing the following:</p>
+
+<pre><code>CREATE OPERATOR - (
+    PROCEDURE = jsonb_minus,
+    LEFTARG   = jsonb,
+    RIGHTARG  = jsonb )
+</code></pre>
+
+<p>Now you can just use the <strong>-</strong> operator like you would do with hstore. Let&rsquo;s look at the result:</p>
+
+<pre><code>SELECT '{&quot;a&quot;:1, &quot;b&quot;:{&quot;c&quot;:123, &quot;d&quot;:&quot;test&quot;}}'::jsonb 
+	- '{&quot;a&quot;:1, &quot;b&quot;:{&quot;c&quot;:321, &quot;d&quot;:&quot;test&quot;}}'::jsonb
+</code></pre>
+
+<p>results in</p>
+
+<pre><code>{&quot;b&quot;: {&quot;c&quot;: 123, &quot;d&quot;: &quot;test&quot;}}
+</code></pre>
+
+<p>Great! &ldquo;a&rdquo; was removed from arg1 as it had the same value, &ldquo;b&rdquo; is still there as it has a different value. But only &ldquo;b&rdquo;-&gt;&ldquo;c&rdquo; is different, yet &ldquo;b&rdquo;-&gt;&ldquo;d&rdquo; is still there. This is because our function only works on the first level of the json object. With a little more effort, we can expand it so that it recursively looks into all the nested properties as well:</p>
+
+<pre><code>CREATE OR REPLACE FUNCTION jsonb_minus ( arg1 jsonb, arg2 jsonb )
+ RETURNS jsonb
+AS $$
+
+SELECT 
+	COALESCE(json_object_agg(
+        key,
+        CASE
+            -- if the value is an object and the value of the second argument is
+            -- not null, we do a recursion
+            WHEN jsonb_typeof(value) = 'object' AND arg2 -&gt; key IS NOT NULL 
+			THEN jsonb_minus(value, arg2 -&gt; key)
+            -- for all the other types, we just return the value
+            ELSE value
+        END
+    ), '{}')::jsonb
+FROM 
+	jsonb_each(arg1)
+WHERE 
+	arg1 -&gt; key &lt;&gt; arg2 -&gt; key 
+	OR arg2 -&gt; key IS NULL
+
+$$ LANGUAGE SQL;
+</code></pre>
+
+<p>Instead of just selecting the value, we now check if the value is a json object. If it is, we call jsonb_minus recursively to substract the nested objects from one another.</p>
+
+<p>Executing the example from earlier now gives us:</p>
+
+<pre><code>{&quot;b&quot;: {&quot;c&quot;: 123}}
+</code></pre>
+
+<p>As you can see, the function now also works for nested jsonb properties.</p>
+
+                </section>
+            </article>
+            <footer id="post-meta" class="clearfix">
+                <a href="https://twitter.com/coussej">
+                        <img class="avatar" src="http://coussej.github.io/images/avatar.png">
+                        <div>
+                            <span class="dark">Jeroen Coussement</span>
+                            <span>minimalist | gopher | open-source advocate</span>
+                        </div>
+                    </a>
+                <section id="sharing">
+                    <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2f2016%2f05%2f24%2fA-Minus-Operator-For-PostgreSQLs-JSONB%2f - A%20Minus%20Operator%20For%20PostgreSQL%27s%20JSONB by @coussej"><span class="icon-twitter"> Tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+                </section>
+            </footer>
+
+            <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'coussej';
+    var disqus_identifier = 'http:\/\/coussej.github.io\/2016\/05\/24\/A-Minus-Operator-For-PostgreSQLs-JSONB\/';
+    var disqus_title = 'A Minus Operator For PostgreSQL\x27s JSONB';
+    var disqus_url = 'http:\/\/coussej.github.io\/2016\/05\/24\/A-Minus-Operator-For-PostgreSQLs-JSONB\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+            <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+    
+    
+        
+        <li>
+            <a href="http://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/">A Minus Operator For PostgreSQL&#39;s JSONB<aside class="dates">May 24</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="http://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/">Building An Open Source Process Historian<aside class="dates">Apr 18</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="http://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/">Handling JSONB in Go Structs<aside class="dates">Feb 16</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">Replacing EAV with JSONB in PostgreSQL<aside class="dates">Jan 14</aside></a>
+        </li>
+        
+   
+    
+        
+   
+    
+        
+        <li>
+            <a href="http://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/">Listening to generic JSON notifications from PostgreSQL in Go<aside class="dates">Sep 15</aside></a>
+        </li>
+        
+   
+</ul>
+            <footer id="footer">
+    
+        
+<div id="social">
+    
+    <a class="symbol" href="https://www.github.com/coussej">
+        circlegithub
+    </a>
+    
+    <a class="symbol" href="https://www.linkedin.com/in/coussej">
+        circlelinkedin
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/coussej">
+        circletwitterbird
+    </a>
+    
+</div>
+
+    
+    <p class="small">
+    
+        © Copyright 2016 Jeroen Coussement
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="http://coussej.github.io/js/main.js"></script>
+<script src="http://coussej.github.io/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-67688634-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+    </body>
+</html>

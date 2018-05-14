@@ -7,6 +7,10 @@ title = "Building An Open Source Process Historian"
 
 > TL;DR: While a lot of big technology companies are already fully invested in open source software development, it seems most of the industrial world is missing the boat. However, for some applications, open software can have some major advantages over proprietary solutions, like better integration and lower TCO. In this post, you can read how easy freely available software components can be combined to a modern, performant process historian. And on top of that, it's free!
 
+### Update 2018
+
+In the 2 years following this post I took some of its ideas and started a company around them. For more info, check [factry.io](https://www.factry.io)!
+
 ### Motivation
 I have been working in the field of industrial automation, more specifically on MES systems, for nearly four years now. The reason I started exploring the possibilities of an open source alternative for the commercial process historians was to address some of the issues and frustrations I have with them.
 

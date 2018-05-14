@@ -15,7 +15,7 @@ disablePathToLower = true
 [params]
 	name = "Jeroen Coussement"
 	description = "Thoughts and Ideas"
-	bio = "minimalist | gopher | open-source advocate"
+	bio = "Jack of all trades, master of none. Automates things @ factry.io 🏭"
 	# Enter optionally your twitter account
 	twitter = "coussej"
 	enableRSS = true
@@ -33,7 +33,7 @@ disablePathToLower = true
 	readMore = ""
 	copyright = ""
 	# Sharing options and author information in posts
-	aboutAuthor = "minimalist | gopher | open-source advocate"
+	aboutAuthor = "Jack of all trades, master of none. Automates things @ factry.io 🏭"
 	tweet = ""
 	share = ""
 	# 404 page
@@ -41,7 +41,7 @@ disablePathToLower = true
 	subtitle404 = ""
 
     # Social icons style - circle, rounded, or empty
-    socialIconStyle = "circle"
+    socialIconStyle = "rounded"
 
 # Add additional social link entries underneath
 [social]

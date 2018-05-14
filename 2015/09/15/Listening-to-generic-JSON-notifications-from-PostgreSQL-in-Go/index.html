@@ -1,51 +1,99 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-us">
 	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="author" content="Jeroen Coussement">
-		<meta name="description" content="Thoughts and Ideas">
-		<meta name="generator" content="Hugo 0.16-DEV" />
-		<title>Listening to generic JSON notifications from PostgreSQL in Go &middot; coussej</title>
-		<link rel="shortcut icon" href="http://coussej.github.io/images/favicon.ico">
-		<link rel="stylesheet" href="http://coussej.github.io/css/style.css">
-		<link rel="stylesheet" href="http://coussej.github.io/css/highlight.css">
-		<link rel="stylesheet" href="http://coussej.github.io/css/monosocialiconsfont.css">
-		
-		<link href="http://coussej.github.io/index.xml" rel="alternate" type="application/rss+xml" title="coussej" />
-		
-		<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-	</head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Jeroen Coussement">
+<meta name="description" content="Thoughts and Ideas">
+<meta name="generator" content="Hugo 0.33" />
+<title>Listening to generic JSON notifications from PostgreSQL in Go</title>
+<link rel="shortcut icon" href="http://coussej.github.io/images/favicon.ico">
+<link rel="stylesheet" href="http://coussej.github.io/css/style.css">
+<link rel="stylesheet" href="http://coussej.github.io/css/highlight.css">
 
-    <body>
-       <nav class="main-nav">
-	
+
+
+<link rel="stylesheet" href="http://coussej.github.io/css/monosocialiconsfont.css">
+
+
+
+<link href="http://coussej.github.io/index.xml" rel="alternate" type="application/rss+xml" title="coussej" />
+
+
+<meta property="og:title" content="Listening to generic JSON notifications from PostgreSQL in Go" />
+<meta property="og:description" content="It&rsquo;s already widely known that PostgreSQL is the leading open source relational database when it comes to features. One of those features is great JSON support, an other is LISTEN/NOTIFY, a nifty pub-sub sytem exclusive to PostgreSQL. When combining these two, you get a good basis for a real-time push notification system. In this post, I will explain how to create a generic trigger function to generate JSON notifications for any table change, and how to listen to them in Go." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/" />
+
+
+
+<meta property="article:published_time" content="2015-09-15T22:23:45&#43;00:00"/>
+
+<meta property="article:modified_time" content="2015-09-15T22:23:45&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta itemprop="name" content="Listening to generic JSON notifications from PostgreSQL in Go">
+<meta itemprop="description" content="It&rsquo;s already widely known that PostgreSQL is the leading open source relational database when it comes to features. One of those features is great JSON support, an other is LISTEN/NOTIFY, a nifty pub-sub sytem exclusive to PostgreSQL. When combining these two, you get a good basis for a real-time push notification system. In this post, I will explain how to create a generic trigger function to generate JSON notifications for any table change, and how to listen to them in Go.">
+
+
+<meta itemprop="datePublished" content="2015-09-15T22:23:45&#43;00:00" />
+<meta itemprop="dateModified" content="2015-09-15T22:23:45&#43;00:00" />
+<meta itemprop="wordCount" content="667">
+
+
+
+<meta itemprop="keywords" content="" />
+
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Listening to generic JSON notifications from PostgreSQL in Go"/>
+<meta name="twitter:description" content="It&rsquo;s already widely known that PostgreSQL is the leading open source relational database when it comes to features. One of those features is great JSON support, an other is LISTEN/NOTIFY, a nifty pub-sub sytem exclusive to PostgreSQL. When combining these two, you get a good basis for a real-time push notification system. In this post, I will explain how to create a generic trigger function to generate JSON notifications for any table change, and how to listen to them in Go."/>
+<meta name="twitter:site" content="@https://www.twitter.com/coussej"/>
+
+
+    </head>
+<body>
+    <nav class="main-nav">
 	
 		<a href='http://coussej.github.io/'> <span class="arrow">←</span>Home</a>
 	
 
 	
-		<a href='http://coussej.github.io/about'>About</a>
-	
 
 	
-	<a class="cta" href="http://coussej.github.io/index.xml">Subscribe</a>
+		<a class="cta" href="http://coussej.github.io/index.xml">Subscribe</a>
 	
 </nav>
 
-        <section id="wrapper">
-            <article class="post">
-                <header>
-                    <h1>Listening to generic JSON notifications from PostgreSQL in Go</h1>
-                    <h2 class="headline">September 15, 2015</h2>
-                </header>
-                <section id="post-body">
-                    
+    <section id="wrapper">
+        
+        
+<article class="post">
+    <header>
+        <h1>Listening to generic JSON notifications from PostgreSQL in Go</h1>
+        <h2 class="subtitle"></h2>
+        <h2 class="headline">
+        September 15, 2015
+        <br>
+        
+        </h2>
+    </header>
+    <section id="post-body">
+        
 
 <p>It&rsquo;s already widely known that PostgreSQL is the leading open source relational database when it comes to features. One of those features is great JSON support, an other is LISTEN/NOTIFY, a nifty pub-sub sytem exclusive to PostgreSQL. When combining these two, you get a good basis for a real-time push notification system. In this post, I will explain how to create a generic trigger function to generate JSON notifications for any table change, and how to listen to them in Go.</p>
 
-<h2 id="the-trigger-function:307f08762c85d301a5b8c6b62d39da46">The trigger function</h2>
+<h2 id="the-trigger-function">The trigger function</h2>
 
 <p>First, we will create the trigger function. The function will notify a channel <em>events</em> with the table name, the action and the old/new row data, depending on the action. As there are no table specific references, you can use the same trigger on all tables you want notifications from.</p>
 
@@ -99,7 +147,7 @@ AFTER INSERT OR UPDATE OR DELETE ON products
     FOR EACH ROW EXECUTE PROCEDURE notify_event();
 </code></pre>
 
-<h2 id="result:307f08762c85d301a5b8c6b62d39da46">Result</h2>
+<h2 id="result">Result</h2>
 
 <p>Fire up <em>psql</em> or any other PostgreSQL client and execute the following:</p>
 
@@ -116,7 +164,7 @@ exampledb=#
 
 <p>Et voila, you now get notifications for any action on the table.</p>
 
-<h2 id="listening-for-the-notifications-in-go:307f08762c85d301a5b8c6b62d39da46">Listening for the notifications in Go.</h2>
+<h2 id="listening-for-the-notifications-in-go">Listening for the notifications in Go.</h2>
 
 <p>Receiving notifications in a terminal doesn&rsquo;t have a lot of real-life value, so the next step would be to capture these events in a server application. In Go, this is fairly easy using the <a href="https://godoc.org/github.com/lib/pq">pq</a> package, which already includes functionality for listening to PostgreSQL notifications.</p>
 
@@ -198,22 +246,23 @@ func main() {
 }  
 </code></pre>
 
-<h2 id="what-s-next:307f08762c85d301a5b8c6b62d39da46">What&rsquo;s next?</h2>
+<h2 id="what-s-next">What&rsquo;s next?</h2>
 
 <p>Of course, this example app isn&rsquo;t going to be of much use in real life. A better example would be to create a Websocket http handler that notifies any subscribed clients of the changes, so you can forward the database updates in real time to the clients. I&rsquo;ll take this up in a next post.</p>
 
-                </section>
-            </article>
-            <footer id="post-meta" class="clearfix">
-                <a href="https://twitter.com/coussej">
-                        <img class="avatar" src="http://coussej.github.io/images/avatar.png">
-                        <div>
-                            <span class="dark">Jeroen Coussement</span>
-                            <span>minimalist | gopher | open-source advocate</span>
-                        </div>
-                    </a>
-                <section id="sharing">
-                    <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2f2015%2f09%2f15%2fListening-to-generic-JSON-notifications-from-PostgreSQL-in-Go%2f - Listening%20to%20generic%20JSON%20notifications%20from%20PostgreSQL%20in%20Go by @coussej"><span class="icon-twitter"> Tweet</span></a>
+    </section>
+</article>
+
+<footer id="post-meta" class="clearfix">
+    <a href="https://twitter.com/coussej">
+    <img class="avatar" src="http://coussej.github.io/images/avatar.png">
+    <div>
+        <span class="dark">Jeroen Coussement</span>
+        <span>Jack of all trades, master of none. Automates things @ factry.io 🏭</span>
+    </div>
+    </a>
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2f2015%2f09%2f15%2fListening-to-generic-JSON-notifications-from-PostgreSQL-in-Go%2f - Listening%20to%20generic%20JSON%20notifications%20from%20PostgreSQL%20in%20Go by @coussej"><span class="icon-twitter"> tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(
@@ -223,111 +272,106 @@ func main() {
     return false;"><span class="icon-facebook-rect"> Share</span>
 </a>
 
-                </section>
-            </footer>
+    </section>
+</footer>
 
-            <div id="disqus_thread"></div>
-<script type="text/javascript">
-    var disqus_shortname = 'coussej';
-    var disqus_identifier = 'http:\/\/coussej.github.io\/2015\/09\/15\/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go\/';
-    var disqus_title = 'Listening to generic JSON notifications from PostgreSQL in Go';
-    var disqus_url = 'http:\/\/coussej.github.io\/2015\/09\/15\/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go\/';
-
+<div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
     (function() {
-        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "coussej" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
     })();
 </script>
-<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-            <ul id="post-list" class="archive readmore">
+<ul id="post-list" class="archive readmore">
     <h3>Read more</h3>
+
     
     
-        
+    
         <li>
-            <a href="http://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/">A Minus Operator For PostgreSQL&#39;s JSONB<aside class="dates">May 24</aside></a>
+            <a href="/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/">A Minus Operator For PostgreSQL&#39;s JSONB<aside class="dates">May 24 2016</aside></a>
         </li>
-        
-   
     
-        
         <li>
-            <a href="http://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/">Building An Open Source Process Historian<aside class="dates">Apr 18</aside></a>
+            <a href="/2016/04/18/Building-An-Open-Source-Process-Historian/">Building An Open Source Process Historian<aside class="dates">Apr 18 2016</aside></a>
         </li>
-        
-   
     
-        
         <li>
-            <a href="http://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/">Handling JSONB in Go Structs<aside class="dates">Feb 16</aside></a>
+            <a href="/2016/02/16/Handling-JSONB-in-Go-Structs/">Handling JSONB in Go Structs<aside class="dates">Feb 16 2016</aside></a>
         </li>
-        
-   
     
-        
         <li>
-            <a href="http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">Replacing EAV with JSONB in PostgreSQL<aside class="dates">Jan 14</aside></a>
+            <a href="/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">Replacing EAV with JSONB in PostgreSQL<aside class="dates">Jan 14 2016</aside></a>
         </li>
-        
-   
     
-        
-   
-    
-        
-        <li>
-            <a href="http://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/">Listening to generic JSON notifications from PostgreSQL in Go<aside class="dates">Sep 15</aside></a>
-        </li>
-        
-   
 </ul>
-            <footer id="footer">
+
+
+
+        <footer id="footer">
     
-        
-<div id="social">
+        <div id="social">
+
+	
+	
     
     <a class="symbol" href="https://www.github.com/coussej">
-        circlegithub
+        roundedgithub
     </a>
     
     <a class="symbol" href="https://www.linkedin.com/in/coussej">
-        circlelinkedin
+        roundedlinkedin
     </a>
     
     <a class="symbol" href="https://www.twitter.com/coussej">
-        circletwitterbird
+        roundedtwitterbird
     </a>
     
+
+
 </div>
 
     
     <p class="small">
     
-        © Copyright 2016 Jeroen Coussement
+        © Copyright 2018 Jeroen Coussement
     
     </p>
 </footer>
 
-        </section>
-
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="http://coussej.github.io/js/main.js"></script>
 <script src="http://coussej.github.io/js/highlight.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
+
+
+
 
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
 ga('create', 'UA-67688634-1', 'auto');
 ga('send', 'pageview');
 </script>
 
 
-    </body>
+</body>
 </html>

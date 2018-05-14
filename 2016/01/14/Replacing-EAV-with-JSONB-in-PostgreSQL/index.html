@@ -1,47 +1,101 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-us">
 	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="author" content="Jeroen Coussement">
-		<meta name="description" content="Thoughts and Ideas">
-		<meta name="generator" content="Hugo 0.16-DEV" />
-		<title>Replacing EAV with JSONB in PostgreSQL &middot; coussej</title>
-		<link rel="shortcut icon" href="http://coussej.github.io/images/favicon.ico">
-		<link rel="stylesheet" href="http://coussej.github.io/css/style.css">
-		<link rel="stylesheet" href="http://coussej.github.io/css/highlight.css">
-		<link rel="stylesheet" href="http://coussej.github.io/css/monosocialiconsfont.css">
-		
-		<link href="http://coussej.github.io/index.xml" rel="alternate" type="application/rss+xml" title="coussej" />
-		
-		<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-	</head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Jeroen Coussement">
+<meta name="description" content="Thoughts and Ideas">
+<meta name="generator" content="Hugo 0.33" />
+<title>Replacing EAV with JSONB in PostgreSQL</title>
+<link rel="shortcut icon" href="http://coussej.github.io/images/favicon.ico">
+<link rel="stylesheet" href="http://coussej.github.io/css/style.css">
+<link rel="stylesheet" href="http://coussej.github.io/css/highlight.css">
 
-    <body>
-       <nav class="main-nav">
-	
+
+
+<link rel="stylesheet" href="http://coussej.github.io/css/monosocialiconsfont.css">
+
+
+
+<link href="http://coussej.github.io/index.xml" rel="alternate" type="application/rss+xml" title="coussej" />
+
+
+<meta property="og:title" content="Replacing EAV with JSONB in PostgreSQL" />
+<meta property="og:description" content="TL;DR: JSONB has potential for greatly simplifying schema design without sacrificing query performance.
+  Introduction It must be one of the oldest use cases in the world of relational databases: you have an entity, and you need to store certain properties of this entity. But, not all entities have the same set of properties, and properties will be added in the future.
+The most naive way to solve this problem would be to create a column in your table for each property, and just fill in the ones that are relevant." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/" />
+
+
+
+<meta property="article:published_time" content="2016-01-14T21:24:05&#43;00:00"/>
+
+<meta property="article:modified_time" content="2016-01-14T21:24:05&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta itemprop="name" content="Replacing EAV with JSONB in PostgreSQL">
+<meta itemprop="description" content="TL;DR: JSONB has potential for greatly simplifying schema design without sacrificing query performance.
+  Introduction It must be one of the oldest use cases in the world of relational databases: you have an entity, and you need to store certain properties of this entity. But, not all entities have the same set of properties, and properties will be added in the future.
+The most naive way to solve this problem would be to create a column in your table for each property, and just fill in the ones that are relevant.">
+
+
+<meta itemprop="datePublished" content="2016-01-14T21:24:05&#43;00:00" />
+<meta itemprop="dateModified" content="2016-01-14T21:24:05&#43;00:00" />
+<meta itemprop="wordCount" content="1730">
+
+
+
+<meta itemprop="keywords" content="" />
+
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Replacing EAV with JSONB in PostgreSQL"/>
+<meta name="twitter:description" content="TL;DR: JSONB has potential for greatly simplifying schema design without sacrificing query performance.
+  Introduction It must be one of the oldest use cases in the world of relational databases: you have an entity, and you need to store certain properties of this entity. But, not all entities have the same set of properties, and properties will be added in the future.
+The most naive way to solve this problem would be to create a column in your table for each property, and just fill in the ones that are relevant."/>
+<meta name="twitter:site" content="@https://www.twitter.com/coussej"/>
+
+
+    </head>
+<body>
+    <nav class="main-nav">
 	
 		<a href='http://coussej.github.io/'> <span class="arrow">←</span>Home</a>
 	
 
 	
-		<a href='http://coussej.github.io/about'>About</a>
-	
 
 	
-	<a class="cta" href="http://coussej.github.io/index.xml">Subscribe</a>
+		<a class="cta" href="http://coussej.github.io/index.xml">Subscribe</a>
 	
 </nav>
 
-        <section id="wrapper">
-            <article class="post">
-                <header>
-                    <h1>Replacing EAV with JSONB in PostgreSQL</h1>
-                    <h2 class="headline">January 14, 2016</h2>
-                </header>
-                <section id="post-body">
-                    
+    <section id="wrapper">
+        
+        
+<article class="post">
+    <header>
+        <h1>Replacing EAV with JSONB in PostgreSQL</h1>
+        <h2 class="subtitle"></h2>
+        <h2 class="headline">
+        January 14, 2016
+        <br>
+        
+        </h2>
+    </header>
+    <section id="post-body">
+        
 
 <blockquote>
 <blockquote>
@@ -49,7 +103,7 @@
 </blockquote>
 </blockquote>
 
-<h3 id="introduction:419b4933fdd1f3e6f0f417c34732288f">Introduction</h3>
+<h3 id="introduction">Introduction</h3>
 
 <p>It must be one of the oldest use cases in the world of relational databases: you have an entity, and you need to store certain properties of this entity. But, not all entities have the same set of properties, and properties will be added in the future.</p>
 
@@ -65,7 +119,7 @@
 
 <p>This new data type enables us to replace the tedious EAV pattern by adding a single JSONB column to our entity table, greatly simplifying the database design. But many argue that this must come with a performance cost. That&rsquo;s why I created this benchmark.</p>
 
-<h3 id="test-database-setup:419b4933fdd1f3e6f0f417c34732288f">Test database setup</h3>
+<h3 id="test-database-setup">Test database setup</h3>
 
 <p>For this comparison, I created a database on a fresh PostgreSQL 9.5 installation on an 80 $ <a href="https://www.digitalocean.com/">DigitalOcean</a> Ubuntu 14.04 box. After tuning some settings in <em>postgresql.conf</em>, I ran <a href="https://gist.github.com/coussej/80c385332ce37df6687f">this</a> script using psql.</p>
 
@@ -118,7 +172,7 @@ CREATE TABLE entity_attribute_value (
 
 <p>So, we now have the same data stored in both formats. Let&rsquo;s start comparing!</p>
 
-<h3 id="query-aesthetics:419b4933fdd1f3e6f0f417c34732288f">Query aesthetics</h3>
+<h3 id="query-aesthetics">Query aesthetics</h3>
 
 <p>Earlier it was already clear that the design of the database was greatly simplified by using a JSONB column for the properties instead of using a 3 tabes EAV model. But does this also reflect in the queries?</p>
 
@@ -179,7 +233,7 @@ WHERE id = 120;
 
 <p>Now, let&rsquo;s talk performance.</p>
 
-<h3 id="performance:419b4933fdd1f3e6f0f417c34732288f">Performance</h3>
+<h3 id="performance">Performance</h3>
 
 <p>To compare performance, I used <a href="http://www.postgresql.org/docs/9.1/static/sql-explain.html">EXPLAIN ANALYSE</a> on the queries above to see how long they take. I did each query at least three times, because the first time the query planner needs some more time. At first, I executed the queries without any indexes. This will obviously be in the advantage of JSONB, as the joins required for EAV can&rsquo;t make use of index scans (the foreign key fields aren&rsquo;t indexed). After that, I created an index on the 2 foreign key columns in the EAV value table, and also a <a href="http://www.postgresql.org/docs/9.1/static/textsearch-indexes.html">GIN</a> index on the JSONB column</p>
 
@@ -197,7 +251,7 @@ WHERE id = 120;
 
 <p>For me, that&rsquo;s fast enough.</p>
 
-<h3 id="table-size:419b4933fdd1f3e6f0f417c34732288f">Table size</h3>
+<h3 id="table-size">Table size</h3>
 
 <p>Let&rsquo;s compare the sizes of both approaches. In psql we can show the size of all tables and indexes using the <strong>\dti+</strong> command:</p>
 
@@ -223,24 +277,25 @@ WHERE id = 120;
 
 <p>For the EAV model, the tables add up to 3068MB and the indexes add up to 3427MB, resulting in a total 6.43GB. On the other hand, the JSONB model uses 1817MB for the table, and 318MB for the indexes, totalling 2,08GB. Thats 3x less. This suprised me a bit, because we store the property names in each JSONB object. But when you think about it, in EAV we store 2 integer foreign keys per attribute value, resulting in 8 bytes of extra data. Also, in EAV all property values are stored as text, while JSONB will use numeric and boolean values internally where possible, resulting in less space.</p>
 
-<h3 id="conclusion:419b4933fdd1f3e6f0f417c34732288f">Conclusion</h3>
+<h3 id="conclusion">Conclusion</h3>
 
 <p>In general, I think storing entity properties in JSONB format can greatly simplify your database design and maintenance. If, like me, you do a lot of ad-hoc querying, having everything stored in the same table as the entity is really useful. The fact that it simplifies interacting with your data is already a plus, but the resulting database is also 3x smaller and from my tests it seems that the performance penalties are very limited. In some cases JSONB even performes faster then EAV, which makes it even better.</p>
 
 <p>However, this benchmark does of course not cover all aspects (like entities with a very large number of properties, a large increase in the number of properties of existing data, &hellip;), so if you have any suggestions on how to improve it, please feel free to leave a comment!</p>
 
-                </section>
-            </article>
-            <footer id="post-meta" class="clearfix">
-                <a href="https://twitter.com/coussej">
-                        <img class="avatar" src="http://coussej.github.io/images/avatar.png">
-                        <div>
-                            <span class="dark">Jeroen Coussement</span>
-                            <span>minimalist | gopher | open-source advocate</span>
-                        </div>
-                    </a>
-                <section id="sharing">
-                    <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2f2016%2f01%2f14%2fReplacing-EAV-with-JSONB-in-PostgreSQL%2f - Replacing%20EAV%20with%20JSONB%20in%20PostgreSQL by @coussej"><span class="icon-twitter"> Tweet</span></a>
+    </section>
+</article>
+
+<footer id="post-meta" class="clearfix">
+    <a href="https://twitter.com/coussej">
+    <img class="avatar" src="http://coussej.github.io/images/avatar.png">
+    <div>
+        <span class="dark">Jeroen Coussement</span>
+        <span>Jack of all trades, master of none. Automates things @ factry.io 🏭</span>
+    </div>
+    </a>
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2f2016%2f01%2f14%2fReplacing-EAV-with-JSONB-in-PostgreSQL%2f - Replacing%20EAV%20with%20JSONB%20in%20PostgreSQL by @coussej"><span class="icon-twitter"> tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(
@@ -250,111 +305,106 @@ WHERE id = 120;
     return false;"><span class="icon-facebook-rect"> Share</span>
 </a>
 
-                </section>
-            </footer>
+    </section>
+</footer>
 
-            <div id="disqus_thread"></div>
-<script type="text/javascript">
-    var disqus_shortname = 'coussej';
-    var disqus_identifier = 'http:\/\/coussej.github.io\/2016\/01\/14\/Replacing-EAV-with-JSONB-in-PostgreSQL\/';
-    var disqus_title = 'Replacing EAV with JSONB in PostgreSQL';
-    var disqus_url = 'http:\/\/coussej.github.io\/2016\/01\/14\/Replacing-EAV-with-JSONB-in-PostgreSQL\/';
-
+<div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
     (function() {
-        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "coussej" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
     })();
 </script>
-<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-            <ul id="post-list" class="archive readmore">
+<ul id="post-list" class="archive readmore">
     <h3>Read more</h3>
+
     
     
-        
+    
         <li>
-            <a href="http://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/">A Minus Operator For PostgreSQL&#39;s JSONB<aside class="dates">May 24</aside></a>
+            <a href="/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/">A Minus Operator For PostgreSQL&#39;s JSONB<aside class="dates">May 24 2016</aside></a>
         </li>
-        
-   
     
-        
         <li>
-            <a href="http://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/">Building An Open Source Process Historian<aside class="dates">Apr 18</aside></a>
+            <a href="/2016/04/18/Building-An-Open-Source-Process-Historian/">Building An Open Source Process Historian<aside class="dates">Apr 18 2016</aside></a>
         </li>
-        
-   
     
-        
         <li>
-            <a href="http://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/">Handling JSONB in Go Structs<aside class="dates">Feb 16</aside></a>
+            <a href="/2016/02/16/Handling-JSONB-in-Go-Structs/">Handling JSONB in Go Structs<aside class="dates">Feb 16 2016</aside></a>
         </li>
-        
-   
     
-        
         <li>
-            <a href="http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">Replacing EAV with JSONB in PostgreSQL<aside class="dates">Jan 14</aside></a>
+            <a href="/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/">Listening to generic JSON notifications from PostgreSQL in Go<aside class="dates">Sep 15 2015</aside></a>
         </li>
-        
-   
     
-        
-   
-    
-        
-        <li>
-            <a href="http://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/">Listening to generic JSON notifications from PostgreSQL in Go<aside class="dates">Sep 15</aside></a>
-        </li>
-        
-   
 </ul>
-            <footer id="footer">
+
+
+
+        <footer id="footer">
     
-        
-<div id="social">
+        <div id="social">
+
+	
+	
     
     <a class="symbol" href="https://www.github.com/coussej">
-        circlegithub
+        roundedgithub
     </a>
     
     <a class="symbol" href="https://www.linkedin.com/in/coussej">
-        circlelinkedin
+        roundedlinkedin
     </a>
     
     <a class="symbol" href="https://www.twitter.com/coussej">
-        circletwitterbird
+        roundedtwitterbird
     </a>
     
+
+
 </div>
 
     
     <p class="small">
     
-        © Copyright 2016 Jeroen Coussement
+        © Copyright 2018 Jeroen Coussement
     
     </p>
 </footer>
 
-        </section>
-
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="http://coussej.github.io/js/main.js"></script>
 <script src="http://coussej.github.io/js/highlight.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
+
+
+
 
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
 ga('create', 'UA-67688634-1', 'auto');
 ga('send', 'pageview');
 </script>
 
 
-    </body>
+</body>
 </html>

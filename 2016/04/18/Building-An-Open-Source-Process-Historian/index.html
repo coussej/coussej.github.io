@@ -1,53 +1,105 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-us">
 	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="author" content="Jeroen Coussement">
-		<meta name="description" content="Thoughts and Ideas">
-		<meta name="generator" content="Hugo 0.16-DEV" />
-		<title>Building An Open Source Process Historian &middot; coussej</title>
-		<link rel="shortcut icon" href="http://coussej.github.io/images/favicon.ico">
-		<link rel="stylesheet" href="http://coussej.github.io/css/style.css">
-		<link rel="stylesheet" href="http://coussej.github.io/css/highlight.css">
-		<link rel="stylesheet" href="http://coussej.github.io/css/monosocialiconsfont.css">
-		
-		<link href="http://coussej.github.io/index.xml" rel="alternate" type="application/rss+xml" title="coussej" />
-		
-		<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-	</head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Jeroen Coussement">
+<meta name="description" content="Thoughts and Ideas">
+<meta name="generator" content="Hugo 0.33" />
+<title>Building An Open Source Process Historian</title>
+<link rel="shortcut icon" href="http://coussej.github.io/images/favicon.ico">
+<link rel="stylesheet" href="http://coussej.github.io/css/style.css">
+<link rel="stylesheet" href="http://coussej.github.io/css/highlight.css">
 
-    <body>
-       <nav class="main-nav">
-	
+
+
+<link rel="stylesheet" href="http://coussej.github.io/css/monosocialiconsfont.css">
+
+
+
+<link href="http://coussej.github.io/index.xml" rel="alternate" type="application/rss+xml" title="coussej" />
+
+
+<meta property="og:title" content="Building An Open Source Process Historian" />
+<meta property="og:description" content="TL;DR: While a lot of big technology companies are already fully invested in open source software development, it seems most of the industrial world is missing the boat. However, for some applications, open software can have some major advantages over proprietary solutions, like better integration and lower TCO. In this post, you can read how easy freely available software components can be combined to a modern, performant process historian." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/" />
+
+
+
+<meta property="article:published_time" content="2016-04-18T08:41:25&#43;00:00"/>
+
+<meta property="article:modified_time" content="2016-04-18T08:41:25&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta itemprop="name" content="Building An Open Source Process Historian">
+<meta itemprop="description" content="TL;DR: While a lot of big technology companies are already fully invested in open source software development, it seems most of the industrial world is missing the boat. However, for some applications, open software can have some major advantages over proprietary solutions, like better integration and lower TCO. In this post, you can read how easy freely available software components can be combined to a modern, performant process historian.">
+
+
+<meta itemprop="datePublished" content="2016-04-18T08:41:25&#43;00:00" />
+<meta itemprop="dateModified" content="2016-04-18T08:41:25&#43;00:00" />
+<meta itemprop="wordCount" content="1878">
+
+
+
+<meta itemprop="keywords" content="" />
+
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Building An Open Source Process Historian"/>
+<meta name="twitter:description" content="TL;DR: While a lot of big technology companies are already fully invested in open source software development, it seems most of the industrial world is missing the boat. However, for some applications, open software can have some major advantages over proprietary solutions, like better integration and lower TCO. In this post, you can read how easy freely available software components can be combined to a modern, performant process historian."/>
+<meta name="twitter:site" content="@https://www.twitter.com/coussej"/>
+
+
+    </head>
+<body>
+    <nav class="main-nav">
 	
 		<a href='http://coussej.github.io/'> <span class="arrow">←</span>Home</a>
 	
 
 	
-		<a href='http://coussej.github.io/about'>About</a>
-	
 
 	
-	<a class="cta" href="http://coussej.github.io/index.xml">Subscribe</a>
+		<a class="cta" href="http://coussej.github.io/index.xml">Subscribe</a>
 	
 </nav>
 
-        <section id="wrapper">
-            <article class="post">
-                <header>
-                    <h1>Building An Open Source Process Historian</h1>
-                    <h2 class="headline">April 18, 2016</h2>
-                </header>
-                <section id="post-body">
-                    
+    <section id="wrapper">
+        
+        
+<article class="post">
+    <header>
+        <h1>Building An Open Source Process Historian</h1>
+        <h2 class="subtitle"></h2>
+        <h2 class="headline">
+        April 18, 2016
+        <br>
+        
+        </h2>
+    </header>
+    <section id="post-body">
+        
 
 <blockquote>
 <p>TL;DR: While a lot of big technology companies are already fully invested in open source software development, it seems most of the industrial world is missing the boat. However, for some applications, open software can have some major advantages over proprietary solutions, like better integration and lower TCO. In this post, you can read how easy freely available software components can be combined to a modern, performant process historian. And on top of that, it&rsquo;s free!</p>
 </blockquote>
 
-<h3 id="motivation:5edadc4035440b9febb5d8290a475d8c">Motivation</h3>
+<h3 id="update-2018">Update 2018</h3>
+
+<p>In the 2 years following this post I took some of its ideas and started a company around them. For more info, check <a href="https://www.factry.io">factry.io</a>!</p>
+
+<h3 id="motivation">Motivation</h3>
 
 <p>I have been working in the field of industrial automation, more specifically on MES systems, for nearly four years now. The reason I started exploring the possibilities of an open source alternative for the commercial process historians was to address some of the issues and frustrations I have with them.</p>
 
@@ -55,7 +107,7 @@
 
 <p>Then we have the visualization layer. Most of the solutions I&rsquo;ve worked with are not very user-friendly, and require additional client software or specific Java versions to run their applet in a very outdated version of Internet Explorer. Ideally, the visualization should be both easy to work with, and require no dependencies on the client side.</p>
 
-<h3 id="approach:5edadc4035440b9febb5d8290a475d8c">Approach</h3>
+<h3 id="approach">Approach</h3>
 
 <p>When you go to the Wikipedia page for <a href="https://en.wikipedia.org/wiki/Operational_historian">operational historian</a>, the first sentence summarizes its main function:</p>
 
@@ -65,19 +117,19 @@
 
 <p>But we already knew that. What&rsquo;s interesting however, is that when you look closely at that summary, the only thing that makes it specific to industrial automation is the word &ldquo;process&rdquo;. So I dropped the &ldquo;process&rdquo; part and started looking for software that could fill in the functionality described by the other 14 words. You probably already guessed it, but people outside of the industrial world are also collecting and storing time-series data. Their interests are more in the fields of server monitoring and application analytics, but the principle is essentially the same. Even better, the scale they work at is even larger than what is typically required for most industrial companies. I&rsquo;m talking tens of thousands of writes per second, which should be more than enough for competing with the current standards.</p>
 
-<h4 id="storing-the-time-series-data:5edadc4035440b9febb5d8290a475d8c">Storing the time-series data</h4>
+<h4 id="storing-the-time-series-data">Storing the time-series data</h4>
 
 <p>One of those time-series databases is <a href="https://influxdata.com/">InfluxDB</a>. The company behind it, InfluxData, is a YCombinator backed startup that has managed to produce a very mature product in a relatively short time, and it is already being used at major companies like ebay and Google. The database is extremely easy to set up, requires no external dependencies, has a SQL like query syntax and is fully open source. Furthermore, reading and writing data is done by means of HTTP requests, so you can very easily interface with it! All of these features combined make it a good fit for what I want to achieve.</p>
 
 <p><a href="https://docs.influxdata.com/influxdb/v0.13/introduction/installation/">Installing InfluxDB</a> on a standard Ubuntu server requires just 5 commands and takes less then a minute, which is peanuts compared to the time it usually takes to install <em>&ndash; insert industrial software package here &ndash;</em>. Now, on to the visualization.</p>
 
-<h4 id="visualizing-data:5edadc4035440b9febb5d8290a475d8c">Visualizing data</h4>
+<h4 id="visualizing-data">Visualizing data</h4>
 
 <p>InfluxDB has its own visualization tool, Chronograf, but after trying it I found that it currently lacks some features and it is not mature enough yet for a robust solution. Then I found <a href="http://grafana.org/">Grafana</a>, a large open-source project with the single purpose of providing an easy way of visualizing time-series data in a meaningful way. It provides you with a well thought-out web-based interface, different graph types and the possibility to create beautiful dashboards. It&rsquo;s already close to 3.0, and after using it for a while I can only say it feels like a very mature product. Moreover, InfluxDB is supported as a datasource out of the box.</p>
 
 <p><a href="http://docs.grafana.org/installation/debian/">Installing and starting Grafana</a> also took less than a minute, so in total we&rsquo;re less then 2 minutes in. Just add InfluxDB as a datasource, and you&rsquo;re good to go!</p>
 
-<h4 id="collecting-the-data:5edadc4035440b9febb5d8290a475d8c">Collecting the data</h4>
+<h4 id="collecting-the-data">Collecting the data</h4>
 
 <p>So, now we have a platform for storing and visualizing time-series data. This brings us to the point where we have to put the word &ldquo;process&rdquo; back in our functional description, because PLC&rsquo;s don&rsquo;t talk HTTP. PLC&rsquo;s talk ProfiNET, Ethernet/IP, &hellip; Most of the time this is solved by installing an OPC server for each brand of PLC you want to talk to. If you have any experience with OPC, you probably know what a pain it is to get OPC working over a network (usually, it means hours of struggling with Windows DCOM settings). Fortunately, the new version of OPC, OPC Unified Access, is a lot easier to work with, and it is platform independent.</p>
 
@@ -102,7 +154,7 @@ deadbandRelative   = 0.0    # Relative max difference for a value not to be coll
 
 <p>&hellip; and you will see your data appearing in InfluxDB. Now you can start exploring your data by building some dashboards in Grafana, which is very straightforward.</p>
 
-<h3 id="result:5edadc4035440b9febb5d8290a475d8c">Result</h3>
+<h3 id="result">Result</h3>
 
 <p>The company OPC Labs exposes a <a href="http://www.opclabs.com/resources/product-information/articles/1094-public-demo-opc-xml-da-server-2">public OPC UA server</a> with random data for testing purposes. I set up a test environment connected to this OPC server and managed to achieve a few thousand measurements per second (yes, second) without even stressing the systems. This was with both the OPCUA and InfluxDB on a remote machine, so I imagine local speeds being much higher. Using the data collected from this demo server, I created a grafana dashboard to demonstrate some of the possibilities Grafana provides for the visualization:</p>
 
@@ -112,13 +164,13 @@ deadbandRelative   = 0.0    # Relative max difference for a value not to be coll
 
 <p>I&rsquo;m currently testing this on a production system for monitoring some values in a Siemens S7 PLC, using a Simatic NET v12 server. It&rsquo;s been running for more then a month now without a single failure, so it looks very promising.</p>
 
-<h4 id="downsides:5edadc4035440b9febb5d8290a475d8c">Downsides</h4>
+<h4 id="downsides">Downsides</h4>
 
 <p>Most of these tools work best in a UNIX-based environment, which might seem a little scary when you&rsquo;re not used to it. However when you get the hang of it you&rsquo;ll never want to go back. I love UNIX and Linux for it&rsquo;s &ldquo;Do one thing, and do it well&rdquo; philosophy. However, if you don&rsquo;t want to go there, you can install all of the above on a Windows box as well. Just be aware that my Ubuntu production box running this full stack is using only 500MB of RAM and 2,5 GB of diskspace. You can&rsquo;t get Windows running on that.</p>
 
 <p>Another downside is that currently there is no slick interface for configuring the collector, we only have a file based configuration management, but I&rsquo;m sure we can improve on that in the future.</p>
 
-<h4 id="upsides:5edadc4035440b9febb5d8290a475d8c">Upsides</h4>
+<h4 id="upsides">Upsides</h4>
 
 <p>First of all, it&rsquo;s free. Free as in freedom and free as in beer. The first kind of free means you can do whatever you want with it. Every part of the stack is open source and you can modify it to your liking, if that&rsquo;s what you want. Also, each part is focussed on doing one thing: collecting data, storing data and visualizing data. If you want to switch one component for another (for example by using Chronograph instead of Grafana when it&rsquo;s more mature), you are free to do so. The second kind of free (as in beer) means you don&rsquo;t have to pay any money for it. Indeed, no licenses, neither for the OS nor the different software components. You can add as many measurements as you like at no extra cost. This, combined with the very easy installation, should lower the treshold for companies to try it out.</p>
 
@@ -126,7 +178,7 @@ deadbandRelative   = 0.0    # Relative max difference for a value not to be coll
 
 <p>Finally, I think it&rsquo;s all pretty slick. The easy installation (just a few commands) results in a reproducible environment. Both InfluxDB and Grafana leverage modern technologies that result in a nice end-user experience. Querying data is fast, dashboards can be easily created and shared within the company, and using the system requires nothing more than a browser.</p>
 
-<h3 id="conclusion:5edadc4035440b9febb5d8290a475d8c">Conclusion</h3>
+<h3 id="conclusion">Conclusion</h3>
 
 <p>I created this application and this post because I&rsquo;d like to see the industrial software world approach things in a more open fashion. In the last few years, a lot of big companies have moved from closed, proprietary solutions to open, community-driven software. Even Microsoft has recently open-source the .NET framework, created an open development tool (Visual Studio Code) and is planning to bring SQL Server to Linux. I hope the big industrial vendors will follow this trend, because in my opinion, the current way of working is focussed on keeping customers locked-in and is holding back innovation.</p>
 
@@ -134,18 +186,19 @@ deadbandRelative   = 0.0    # Relative max difference for a value not to be coll
 
 <p>If you have any questions, suggestions, or you just want to get more information, don&rsquo;t hesitate to drop me a line!</p>
 
-                </section>
-            </article>
-            <footer id="post-meta" class="clearfix">
-                <a href="https://twitter.com/coussej">
-                        <img class="avatar" src="http://coussej.github.io/images/avatar.png">
-                        <div>
-                            <span class="dark">Jeroen Coussement</span>
-                            <span>minimalist | gopher | open-source advocate</span>
-                        </div>
-                    </a>
-                <section id="sharing">
-                    <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2f2016%2f04%2f18%2fBuilding-An-Open-Source-Process-Historian%2f - Building%20An%20Open%20Source%20Process%20Historian by @coussej"><span class="icon-twitter"> Tweet</span></a>
+    </section>
+</article>
+
+<footer id="post-meta" class="clearfix">
+    <a href="https://twitter.com/coussej">
+    <img class="avatar" src="http://coussej.github.io/images/avatar.png">
+    <div>
+        <span class="dark">Jeroen Coussement</span>
+        <span>Jack of all trades, master of none. Automates things @ factry.io 🏭</span>
+    </div>
+    </a>
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fcoussej.github.io%2f2016%2f04%2f18%2fBuilding-An-Open-Source-Process-Historian%2f - Building%20An%20Open%20Source%20Process%20Historian by @coussej"><span class="icon-twitter"> tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(
@@ -155,111 +208,106 @@ deadbandRelative   = 0.0    # Relative max difference for a value not to be coll
     return false;"><span class="icon-facebook-rect"> Share</span>
 </a>
 
-                </section>
-            </footer>
+    </section>
+</footer>
 
-            <div id="disqus_thread"></div>
-<script type="text/javascript">
-    var disqus_shortname = 'coussej';
-    var disqus_identifier = 'http:\/\/coussej.github.io\/2016\/04\/18\/Building-An-Open-Source-Process-Historian\/';
-    var disqus_title = 'Building An Open Source Process Historian';
-    var disqus_url = 'http:\/\/coussej.github.io\/2016\/04\/18\/Building-An-Open-Source-Process-Historian\/';
-
+<div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
     (function() {
-        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "coussej" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
     })();
 </script>
-<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
-            <ul id="post-list" class="archive readmore">
+<ul id="post-list" class="archive readmore">
     <h3>Read more</h3>
+
     
     
-        
+    
         <li>
-            <a href="http://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/">A Minus Operator For PostgreSQL&#39;s JSONB<aside class="dates">May 24</aside></a>
+            <a href="/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/">A Minus Operator For PostgreSQL&#39;s JSONB<aside class="dates">May 24 2016</aside></a>
         </li>
-        
-   
     
-        
         <li>
-            <a href="http://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/">Building An Open Source Process Historian<aside class="dates">Apr 18</aside></a>
+            <a href="/2016/02/16/Handling-JSONB-in-Go-Structs/">Handling JSONB in Go Structs<aside class="dates">Feb 16 2016</aside></a>
         </li>
-        
-   
     
-        
         <li>
-            <a href="http://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/">Handling JSONB in Go Structs<aside class="dates">Feb 16</aside></a>
+            <a href="/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">Replacing EAV with JSONB in PostgreSQL<aside class="dates">Jan 14 2016</aside></a>
         </li>
-        
-   
     
-        
         <li>
-            <a href="http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">Replacing EAV with JSONB in PostgreSQL<aside class="dates">Jan 14</aside></a>
+            <a href="/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/">Listening to generic JSON notifications from PostgreSQL in Go<aside class="dates">Sep 15 2015</aside></a>
         </li>
-        
-   
     
-        
-   
-    
-        
-        <li>
-            <a href="http://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/">Listening to generic JSON notifications from PostgreSQL in Go<aside class="dates">Sep 15</aside></a>
-        </li>
-        
-   
 </ul>
-            <footer id="footer">
+
+
+
+        <footer id="footer">
     
-        
-<div id="social">
+        <div id="social">
+
+	
+	
     
     <a class="symbol" href="https://www.github.com/coussej">
-        circlegithub
+        roundedgithub
     </a>
     
     <a class="symbol" href="https://www.linkedin.com/in/coussej">
-        circlelinkedin
+        roundedlinkedin
     </a>
     
     <a class="symbol" href="https://www.twitter.com/coussej">
-        circletwitterbird
+        roundedtwitterbird
     </a>
     
+
+
 </div>
 
     
     <p class="small">
     
-        © Copyright 2016 Jeroen Coussement
+        © Copyright 2018 Jeroen Coussement
     
     </p>
 </footer>
 
-        </section>
-
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="http://coussej.github.io/js/main.js"></script>
 <script src="http://coussej.github.io/js/highlight.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
+
+
+
 
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
 ga('create', 'UA-67688634-1', 'auto');
 ga('send', 'pageview');
 </script>
 
 
-    </body>
+</body>
 </html>

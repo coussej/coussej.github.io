@@ -9,7 +9,7 @@ title = "Building An Open Source Process Historian"
 
 ### Update 2018
 
-In the 2 years following this post I took some of its ideas and started a company around them. For more info, check [factry.io](https://www.factry.io)!
+In the 2 years following this post I took some of its ideas and started a company around them. For more info, check [factry.io](https://www.factry.io/?utm_source=coussej_blog&utm_medium=link&utm_campaign=open_source_historian)!
 
 ### Motivation
 I have been working in the field of industrial automation, more specifically on MES systems, for nearly four years now. The reason I started exploring the possibilities of an open source alternative for the commercial process historians was to address some of the issues and frustrations I have with them.

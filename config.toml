@@ -1,5 +1,5 @@
 # Site settings
-baseurl = "http://coussej.github.io/"
+baseurl = "https://coussej.github.io/"
 languageCode = "en-us"
 title = "coussej"
 theme = "hugo-cactus-theme"

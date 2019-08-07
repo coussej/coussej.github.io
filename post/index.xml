@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on coussej</title>
-    <link>http://coussej.github.io/post/</link>
+    <link>https://coussej.github.io/post/</link>
     <description>Recent content in Posts on coussej</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 24 May 2016 14:51:08 +0000</lastBuildDate>
     
-	<atom:link href="http://coussej.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://coussej.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>A Minus Operator For PostgreSQL&#39;s JSONB</title>
-      <link>http://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/</link>
+      <link>https://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/</link>
       <pubDate>Tue, 24 May 2016 14:51:08 +0000</pubDate>
       
-      <guid>http://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/</guid>
+      <guid>https://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/</guid>
       <description>Those who are familiar with the PostgreSQL hstore extension will probably know that you have the possibility to delete matching pairs from 2 hstore objects by substracting them from one another:
 SELECT &#39;a=&amp;gt;1, b=&amp;gt;2, c=&amp;gt;3&#39;::hstore - &#39;a=&amp;gt;4, b=&amp;gt;2&#39;::hstore  which results in
 &amp;quot;a&amp;quot;=&amp;gt;&amp;quot;1&amp;quot;, &amp;quot;c&amp;quot;=&amp;gt;&amp;quot;3&amp;quot;  This is particularly usefull for audit triggers that store the row data in a hstore column, where you can easily see which columns were changed and to what by substracting the new row from the old row (as hstore of course):</description>
@@ -24,19 +24,19 @@ SELECT &#39;a=&amp;gt;1, b=&amp;gt;2, c=&amp;gt;3&#39;::hstore - &#39;a=&amp;gt;
     
     <item>
       <title>Building An Open Source Process Historian</title>
-      <link>http://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/</link>
+      <link>https://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/</link>
       <pubDate>Mon, 18 Apr 2016 08:41:25 +0000</pubDate>
       
-      <guid>http://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/</guid>
+      <guid>https://coussej.github.io/2016/04/18/Building-An-Open-Source-Process-Historian/</guid>
       <description>TL;DR: While a lot of big technology companies are already fully invested in open source software development, it seems most of the industrial world is missing the boat. However, for some applications, open software can have some major advantages over proprietary solutions, like better integration and lower TCO. In this post, you can read how easy freely available software components can be combined to a modern, performant process historian.</description>
     </item>
     
     <item>
       <title>Handling JSONB in Go Structs</title>
-      <link>http://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/</link>
+      <link>https://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/</link>
       <pubDate>Tue, 16 Feb 2016 10:33:11 +0000</pubDate>
       
-      <guid>http://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/</guid>
+      <guid>https://coussej.github.io/2016/02/16/Handling-JSONB-in-Go-Structs/</guid>
       <description>In a previous post I already described how much database design can be simplified by using the PostgreSQL JSONB datatypes for storing entity properties. Here, I&amp;rsquo;ll show how you can map this design directly onto your structs in Go.
 We want to handle this kind of entity in our application:
 { id: 1 name: &amp;quot;test entity 1&amp;quot; description: &amp;quot;a test entity for some guy&#39;s blog&amp;quot; properties: { color: &amp;quot;red&amp;quot; lenght: 120 width: 3.</description>
@@ -44,10 +44,10 @@ We want to handle this kind of entity in our application:
     
     <item>
       <title>Replacing EAV with JSONB in PostgreSQL</title>
-      <link>http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/</link>
+      <link>https://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/</link>
       <pubDate>Thu, 14 Jan 2016 21:24:05 +0000</pubDate>
       
-      <guid>http://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/</guid>
+      <guid>https://coussej.github.io/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/</guid>
       <description>TL;DR: JSONB has potential for greatly simplifying schema design without sacrificing query performance.
   Introduction It must be one of the oldest use cases in the world of relational databases: you have an entity, and you need to store certain properties of this entity. But, not all entities have the same set of properties, and properties will be added in the future.
 The most naive way to solve this problem would be to create a column in your table for each property, and just fill in the ones that are relevant.</description>
@@ -55,10 +55,10 @@ The most naive way to solve this problem would be to create a column in your tab
     
     <item>
       <title>Listening to generic JSON notifications from PostgreSQL in Go</title>
-      <link>http://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/</link>
+      <link>https://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/</link>
       <pubDate>Tue, 15 Sep 2015 22:23:45 +0000</pubDate>
       
-      <guid>http://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/</guid>
+      <guid>https://coussej.github.io/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/</guid>
       <description>It&amp;rsquo;s already widely known that PostgreSQL is the leading open source relational database when it comes to features. One of those features is great JSON support, an other is LISTEN/NOTIFY, a nifty pub-sub sytem exclusive to PostgreSQL. When combining these two, you get a good basis for a real-time push notification system. In this post, I will explain how to create a generic trigger function to generate JSON notifications for any table change, and how to listen to them in Go.</description>
     </item>
     

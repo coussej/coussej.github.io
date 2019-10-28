@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://coussej.github.io/2019/10/28/Open-Source-Monitoring-of-Industrial-Systems-with-InfluxDB-using-OPC-UA-Part-2/</loc>
+    <lastmod>2019-10-28T14:01:49+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://coussej.github.io/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/</loc>
     <lastmod>2016-05-24T14:51:08+00:00</lastmod>
   </url>
@@ -39,7 +44,7 @@
   
   <url>
     <loc>https://coussej.github.io/post/</loc>
-    <lastmod>2016-05-24T14:51:08+00:00</lastmod>
+    <lastmod>2019-10-28T14:01:49+01:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -50,7 +55,7 @@
   
   <url>
     <loc>https://coussej.github.io/</loc>
-    <lastmod>2016-05-24T14:51:08+00:00</lastmod>
+    <lastmod>2019-10-28T14:01:49+01:00</lastmod>
     <priority>0</priority>
   </url>
   

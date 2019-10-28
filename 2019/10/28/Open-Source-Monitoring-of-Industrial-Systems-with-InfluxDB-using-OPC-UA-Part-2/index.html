@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Jeroen Coussement">
+<meta name="description" content="Thoughts and Ideas">
+<meta name="generator" content="Hugo 0.33" />
+<title>Open-Source Monitoring of Industrial Systems with InfluxDB using OPC-UA, Part 2</title>
+<link rel="shortcut icon" href="https://coussej.github.io/images/favicon.ico">
+<link rel="stylesheet" href="https://coussej.github.io/css/style.css">
+<link rel="stylesheet" href="https://coussej.github.io/css/highlight.css">
+
+
+
+<link rel="stylesheet" href="https://coussej.github.io/css/monosocialiconsfont.css">
+
+
+
+<link href="https://coussej.github.io/index.xml" rel="alternate" type="application/rss+xml" title="coussej" />
+
+
+<meta property="og:title" content="Open-Source Monitoring of Industrial Systems with InfluxDB using OPC-UA, Part 2" />
+<meta property="og:description" content="A little over 3 years ago, I released a blog post about using open source tools like InfluxDB and Grafana to replace the functionality of classical Process Historians, and by doing so opening up the collected data to anyone who needed it. The idea was to use the OPC-UA protocol as a way to get the data from industrial systems and send it to InfluxDB. Together with the post I also released the node-opcua-logger project on GitHub." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://coussej.github.io/2019/10/28/Open-Source-Monitoring-of-Industrial-Systems-with-InfluxDB-using-OPC-UA-Part-2/" />
+
+
+
+<meta property="article:published_time" content="2019-10-28T14:01:49&#43;01:00"/>
+
+<meta property="article:modified_time" content="2019-10-28T14:01:49&#43;01:00"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta itemprop="name" content="Open-Source Monitoring of Industrial Systems with InfluxDB using OPC-UA, Part 2">
+<meta itemprop="description" content="A little over 3 years ago, I released a blog post about using open source tools like InfluxDB and Grafana to replace the functionality of classical Process Historians, and by doing so opening up the collected data to anyone who needed it. The idea was to use the OPC-UA protocol as a way to get the data from industrial systems and send it to InfluxDB. Together with the post I also released the node-opcua-logger project on GitHub.">
+
+
+<meta itemprop="datePublished" content="2019-10-28T14:01:49&#43;01:00" />
+<meta itemprop="dateModified" content="2019-10-28T14:01:49&#43;01:00" />
+<meta itemprop="wordCount" content="435">
+
+
+
+<meta itemprop="keywords" content="" />
+
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Open-Source Monitoring of Industrial Systems with InfluxDB using OPC-UA, Part 2"/>
+<meta name="twitter:description" content="A little over 3 years ago, I released a blog post about using open source tools like InfluxDB and Grafana to replace the functionality of classical Process Historians, and by doing so opening up the collected data to anyone who needed it. The idea was to use the OPC-UA protocol as a way to get the data from industrial systems and send it to InfluxDB. Together with the post I also released the node-opcua-logger project on GitHub."/>
+<meta name="twitter:site" content="@https://www.twitter.com/coussej"/>
+
+
+    </head>
+<body>
+    <nav class="main-nav">
+	
+		<a href='https://coussej.github.io/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+
+	
+		<a class="cta" href="https://coussej.github.io/index.xml">Subscribe</a>
+	
+</nav>
+
+    <section id="wrapper">
+        
+        
+<article class="post">
+    <header>
+        <h1>Open-Source Monitoring of Industrial Systems with InfluxDB using OPC-UA, Part 2</h1>
+        <h2 class="subtitle"></h2>
+        <h2 class="headline">
+        October 28, 2019
+        <br>
+        
+        </h2>
+    </header>
+    <section id="post-body">
+        
+
+<p>A little over 3 years ago, I released a <a href="/2016/04/18/Building-An-Open-Source-Process-Historian/">blog post</a> about using open source tools like <a href="https://www.influxdata.com/products/influxdb-overview/">InfluxDB</a> and <a href="https://grafana.com/">Grafana</a> to replace the functionality of classical Process Historians, and by doing so opening up the collected data to anyone who needed it. The idea was to use the OPC-UA protocol as a way to get the data from industrial systems and send it to InfluxDB. Together with the post I also released the <strong>node-opcua-logger</strong> project on GitHub.</p>
+
+<p>Since then, a lot has been going on. People around me adopted the idea of using these kinds of open tools for industrial applications. As a result, I quit my job and started a company called <a href="https://www.factry.io">Factry</a>, where amongst other things we built the Factry Historian, a commercial product based on those ideas from 3 years ago.</p>
+
+<p>While developing the Factry Historian, we learned a lot and have implemented both new functionalities and a lot of improvements compared to the first release. As a lot of people still successfully use the community version of our data collector - and the code was getting a bit outdated - we felt it would be a good idea to trickle down some of our improvements to the original project.</p>
+
+<p>So, long story short, <strong><a href="https://github.com/coussej/node-opcua-logger">v2-alpha</a></strong> has been released on github! Below you can find an overview of the most significant changes.</p>
+
+<h3 id="pre-built-binaries">Pre-built binaries</h3>
+
+<p>You can now download <strong>pre-built binaries for Windows, Linux and MacOS</strong> instead of having to clone the project, which eliminates a lot of the hassle for people who are not experienced with git, nodeJS, &hellip; You can find these binaries under the <a href="https://github.com/coussej/node-opcua-logger/releases">releases</a> section of the github repository.</p>
+
+<h3 id="better-buffering">Better buffering</h3>
+
+<p>In the previous version, all collected data was first written to disk in an applications specific database format before it was sent to InfluxDB. This is very disk intensive and has proven not to be a sensible approach. Therefore, buffering is now done in-memory as long as connectivity with InfluxDB is available. Only once connection-problems occur, the buffer is dumped on disk in JSON format.</p>
+
+<h3 id="easier-configuration">Easier configuration</h3>
+
+<p>A lot of unnecessary config was replaced with sensible defaults (overridable in the environment), resulting in a simpler and cleaner config file. Furthermore, you can now choose to supply the config in either TOML or JSON, whichever you prefer.</p>
+
+<h3 id="cleaner-code">Cleaner code</h3>
+
+<p>NodeJS has also evolved a lot during the last few years, now fully supporting async/await. The opcua-logger code is now heavily using this abstraction from callbacks, resulting in much more readable code.</p>
+
+<h3 id="and-more">&hellip;and more!</h3>
+
+<p>Please check it out for yourself, and perhaps contribute by submitting any issues or suggestions on GitHub!</p>
+
+    </section>
+</article>
+
+<footer id="post-meta" class="clearfix">
+    <a href="https://twitter.com/coussej">
+    <img class="avatar" src="https://coussej.github.io/images/avatar.png">
+    <div>
+        <span class="dark">Jeroen Coussement</span>
+        <span>Jack of all trades, master of none. Automates things @ factry.io 🏭</span>
+    </div>
+    </a>
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fcoussej.github.io%2f2019%2f10%2f28%2fOpen-Source-Monitoring-of-Industrial-Systems-with-InfluxDB-using-OPC-UA-Part-2%2f - Open-Source%20Monitoring%20of%20Industrial%20Systems%20with%20InfluxDB%20using%20OPC-UA%2c%20Part%202 by @coussej"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+    </section>
+</footer>
+
+<div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "coussej" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+<ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/2016/05/24/A-Minus-Operator-For-PostgreSQLs-JSONB/">A Minus Operator For PostgreSQL&#39;s JSONB<aside class="dates">May 24 2016</aside></a>
+        </li>
+    
+        <li>
+            <a href="/2016/04/18/Building-An-Open-Source-Process-Historian/">Building An Open Source Process Historian<aside class="dates">Apr 18 2016</aside></a>
+        </li>
+    
+        <li>
+            <a href="/2016/02/16/Handling-JSONB-in-Go-Structs/">Handling JSONB in Go Structs<aside class="dates">Feb 16 2016</aside></a>
+        </li>
+    
+        <li>
+            <a href="/2016/01/14/Replacing-EAV-with-JSONB-in-PostgreSQL/">Replacing EAV with JSONB in PostgreSQL<aside class="dates">Jan 14 2016</aside></a>
+        </li>
+    
+        <li>
+            <a href="/2015/09/15/Listening-to-generic-JSON-notifications-from-PostgreSQL-in-Go/">Listening to generic JSON notifications from PostgreSQL in Go<aside class="dates">Sep 15 2015</aside></a>
+        </li>
+    
+</ul>
+
+
+
+        <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    
+    <a class="symbol" href="https://www.github.com/coussej">
+        roundedgithub
+    </a>
+    
+    <a class="symbol" href="https://www.linkedin.com/in/coussej">
+        roundedlinkedin
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/coussej">
+        roundedtwitterbird
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+        © Copyright 2019 Jeroen Coussement
+    
+    </p>
+</footer>
+
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://coussej.github.io/js/main.js"></script>
+<script src="https://coussej.github.io/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-67688634-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+</body>
+</html>

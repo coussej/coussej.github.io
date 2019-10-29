@@ -6,7 +6,7 @@ draft: false
 
 A little over 3 years ago, I released a [blog post]({{< relref "0417_BuildingAnOpenSourceProcessHistorian.md" >}}) about using open source tools like [InfluxDB](https://www.influxdata.com/products/influxdb-overview/) and [Grafana](https://grafana.com/) to replace the functionality of classical Process Historians, and by doing so opening up the collected data to anyone who needed it. The idea was to use the OPC-UA protocol as a way to get the data from industrial systems and send it to InfluxDB. Together with the post I also released the **node-opcua-logger** project on GitHub. 
 
-Since then, a lot has been going on. People around me adopted the idea of using these kinds of open tools for industrial applications. As a result, I quit my job and started a company called [Factry](https://www.factry.io), where amongst other things we built the Factry Historian, a commercial product based on those ideas from 3 years ago. 
+Since then, a lot has been going on. People around me adopted the idea of using these kinds of open tools for industrial applications. As a result, I quit my job and started a company called [Factry](https://www.factry.io/?utm_source=coussej_blog&utm_medium=link&utm_campaign=open_source_historian_v2), where amongst other things we built the Factry Historian, a commercial product based on those ideas from 3 years ago. 
 
 While developing the Factry Historian, we learned a lot and have implemented both new functionalities and a lot of improvements compared to the first release. As a lot of people still successfully use the community version of our data collector - and the code was getting a bit outdated - we felt it would be a good idea to trickle down some of our improvements to the original project.
 
